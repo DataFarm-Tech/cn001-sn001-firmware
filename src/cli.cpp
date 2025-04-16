@@ -60,6 +60,38 @@ void read_serial_cli(void *param)
 void handle_cmd(const char* cmd) 
 {
     Serial.println(cmd);
+
+    //delimit the command by space
+    char* token = strtok(cmd, " ");
+    if (token == NULL) //if the command is empty
+    {
+        return;
+    }
+
+    //check if the command is "help"
+    if (strcmp(token, "help") == 0) 
+    {
+        Serial.println("Available commands:");
+        Serial.println("help - Show this help message");
+        Serial.println("exit - Exit the CLI");
+        return;
+    }
     return;
 }
-  
+
+
+/**
+ * @brief This function prints the message of the day (MOTD) to the serial console.
+ * @param None
+ * @return None
+ */
+
+//TODO: Call this function before starting the read_serial_cli function
+void print_motd()
+{
+    printf("Welcome to the DataFarm Debug CLI!\n");
+    printf("Type 'help' for a list of commands.\n");
+    printf("Type 'exit' to exit the CLI.\n");
+    printf("\n");
+    return;
+}
