@@ -71,9 +71,9 @@ void handle_cmd(const char* cmd)
     //check if the command is "help"
     if (strcmp(token, "help") == 0) 
     {
-        Serial.println("Available commands:");
-        Serial.println("help - Show this help message");
-        Serial.println("exit - Exit the CLI");
+        printf("Available commands:\n");
+        printf("help - Show this help message\n");
+        printf("exit - Exit the CLI\n");
         return;
     }
     return;
