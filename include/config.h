@@ -3,6 +3,9 @@
 
 #define ID "UNDEFINED" //if ID is never defined in compilation process, it will be set to "UNDEFINED"
 
+//TODO: add better var naming docs
+#define INT_STATE_PIN 34 // Pin for interrupt state
+#define INT_STATE_PIN_2 35 // Pin for interrupt state 2
 
 
 #define BAUD_RATE 115200
