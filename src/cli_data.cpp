@@ -38,19 +38,31 @@ void handle_cmd(const char* cmd)
 
     trim_newline(token);
 
-    if (strcmp(token, "help") == 0) 
+    if (strncmp(token, "help", sizeof(token)) == 0) 
     {
         cli_printf("Available commands:\n");
         cli_printf("  help - Show this help message\n");
         cli_printf("  exit - Exit the CLI\n");
+        cli_printf("  reboot - Reboot This Device\n");
         return;
     }
 
-    if (strcmp(token, "exit") == 0)
+    if (strncmp(token, "exit", sizeof(token)) == 0)
     {
         cli_print("Exiting CLI...\n");
         return;
     }
+
+    /* Will have to move this reboot portion into a function.
+    Since reboot funtionality may be used in other areas.*/
+    if (strncmp(token, "reboot", sizeof(token)) == 0)
+    {
+        cli_print("CLI Triggered Reboot\n");
+        delay(1000);
+        ESP.restart();
+        return;
+    }
+    
 
     cli_printf("Unknown command: %s\n", token);
 }
