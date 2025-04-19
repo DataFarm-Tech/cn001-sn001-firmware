@@ -3,5 +3,7 @@
 
 void read_serial_cli(void* param);
 void print_motd();
+void handle_cmd(const char* cmd);
+void trim_newline(char* str);
 
 #endif // CLI_DATA_H

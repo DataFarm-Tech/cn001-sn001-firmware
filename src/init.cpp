@@ -1,9 +1,13 @@
-#include <stdio.h>
+#include <Arduino.h>
 #include "cli_data.h"
 #include "init.h"
-#include <Arduino.h>
+#include "interrupts.h"
+#include "config.h"
 
-TaskHandle_t read_serial_cli_th; //thread handler for lora listen thread
+TaskHandle_t read_serial_cli_th; //thread handler for CLI thread
+TaskHandle_t sensorTaskHandle = NULL;
+TaskHandle_t controllerTaskHandle = NULL;
+volatile device_state_t current_state = CONTROLLER_STATE;
 
 /**
  * @brief This thread is the first to run and initializes the system.
@@ -14,15 +18,21 @@ TaskHandle_t read_serial_cli_th; //thread handler for lora listen thread
  */
 void init_p()
 {
-    Serial.begin(115200);
-    sleep(4);
-    printf("init_p: Starting initialization...\n");
-    print_motd();
-    xTaskCreatePinnedToCore(read_serial_cli, "read_serial_cli", 10000, NULL, 1, &read_serial_cli_th, 0); //create lora listen thread
+  Serial.begin(BAUD_RATE);
+  delay(5);
+  printf("init_p: Starting initialization...\n");
 
-    //Call threads: CLI
-    //Interupt, check state
-    //Depending on state, start threads
-    //LoRa, HTTP
+  pinMode(INT_STATE_PIN, INPUT);
+  pinMode(INT_STATE_PIN_2, INPUT);
+  
+  // Attach interrupts to both pins to monitor state changes
+  attachInterrupt(digitalPinToInterrupt(INT_STATE_PIN), switch_state, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(INT_STATE_PIN_2), switch_state, CHANGE);
 
+  // Start in controller mode by default
+  switch_to_controller_state();
+  
+  //CLI Thread creation.
+  print_motd();
+  xTaskCreatePinnedToCore(read_serial_cli, "read_serial_cli", 10000, NULL, 1, &read_serial_cli_th, 0);
 }
