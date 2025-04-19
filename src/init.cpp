@@ -1,24 +1,13 @@
-#include <stdio.h>
 #include <Arduino.h>
-
 #include "cli_data.h"
 #include "init.h"
 #include "interrupts.h"
 #include "config.h"
 
-typedef enum
-{
-    SENSOR_STATE = 1,
-    CONTROLLER_STATE = 2,
-} device_state_t;
-
 TaskHandle_t read_serial_cli_th; //thread handler for CLI thread
-
-volatile unsigned long debounceTimerPin1 = 0;
-volatile unsigned long debounceTimerPin2 = 0;
-volatile device_state_t current_state = SENSOR_STATE;
-volatile bool stateChangeFlag = false;
-const unsigned int DEBOUNCE_DELAY = 50;
+TaskHandle_t sensorTaskHandle = NULL;
+TaskHandle_t controllerTaskHandle = NULL;
+volatile device_state_t current_state = CONTROLLER_STATE;
 
 /**
  * @brief This thread is the first to run and initializes the system.
@@ -29,40 +18,21 @@ const unsigned int DEBOUNCE_DELAY = 50;
  */
 void init_p()
 {
-    Serial.begin(BAUD_RATE);
-    sleep(5);
-    printf("init_p: Starting initialization...\n");
-    
-    //CLI Thread creation.
-    print_motd();
-    xTaskCreatePinnedToCore(read_serial_cli, "read_serial_cli", 10000, NULL, 1, &read_serial_cli_th, 0); //create lora listen thread
-    
-//     pinMode(INT_STATE_PIN, INPUT);
-//     pinMode(INT_STATE_PIN_2, INPUT);
-    
-//     // attachInterrupt(INT_STATE_PIN, switch_state, RISING);
-//     // attachInterrupt(INT_STATE_PIN_2, switch_state, RISING);
-//     // For your init.cpp file
+  Serial.begin(BAUD_RATE);
+  delay(5);
+  printf("init_p: Starting initialization...\n");
+
+  pinMode(INT_STATE_PIN, INPUT);
+  pinMode(INT_STATE_PIN_2, INPUT);
   
-//   // Lambda-based debounce for first pin
-//   attachInterrupt(INT_STATE_PIN, []() IRAM_ATTR {
-//     unsigned long currentTime = millis();
-//     if ((currentTime - debounceTimerPin1) >= DEBOUNCE_DELAY) {
-//       current_state = SENSOR_STATE;
-//       stateChangeFlag = true;
-//       debounceTimerPin1 = currentTime;
-//     }
-//     Serial.println(current_state);
-//   }, RISING);
+  // Attach interrupts to both pins to monitor state changes
+  attachInterrupt(digitalPinToInterrupt(INT_STATE_PIN), switch_state, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(INT_STATE_PIN_2), switch_state, CHANGE);
+
+  // Start in controller mode by default
+  switch_to_controller_state();
   
-//   // Lambda-based debounce for second pin
-//   attachInterrupt(INT_STATE_PIN_2, []() IRAM_ATTR {
-//     unsigned long currentTime = millis();
-//     if ((currentTime - debounceTimerPin2) >= DEBOUNCE_DELAY) {
-//       current_state = CONTROLLER_STATE;
-//       stateChangeFlag = true;
-//       debounceTimerPin2 = currentTime;
-//     }
-//     Serial.println(current_state);
-//   }, RISING);
+  //CLI Thread creation.
+  print_motd();
+  xTaskCreatePinnedToCore(read_serial_cli, "read_serial_cli", 10000, NULL, 1, &read_serial_cli_th, 0);
 }
