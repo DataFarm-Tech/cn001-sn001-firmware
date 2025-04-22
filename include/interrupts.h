@@ -3,9 +3,8 @@
 
 #include <Arduino.h>
 
-void switch_state() IRAM_ATTR;
-void process_state_change();
-void switch_to_sensor_state();
-void switch_to_controller_state();
+void has_state_changed() IRAM_ATTR;
+void process_state_change(void *param);
+void switch_state(const int sensor_pin, const int controller_pin);
 
 #endif // INTERRUPTS_H
