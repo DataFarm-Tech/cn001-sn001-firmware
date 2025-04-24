@@ -8,7 +8,7 @@
 #define PROC_CS_TH_STACK_SIZE 10000
 #define READ_SERIAL_CLI_TH_STACK_SIZE 10000
 #define LORA_LISTENER_TH_STACK_SIZE 10000
-#define MAIN_APP_TH_STACK_SIZE 10000
+#define MAIN_APP_TH_STACK_SIZE 5000
 #define HTTP_TH_STACK_SIZE 10000
 
 extern TaskHandle_t read_serial_cli_th; //thread handler for CLI thread

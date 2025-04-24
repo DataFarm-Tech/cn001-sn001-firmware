@@ -5,6 +5,7 @@
 #include "init.h"
 #include "utils.h"
 #include "hw.h"
+#include "main_app.h"
 
 
 volatile unsigned long last_interrupt_time = 0;
@@ -74,7 +75,7 @@ void switch_state(const int sensor_pin, const int controller_pin)
         delete_th(http_th);      
         
         //do rs485 pin setup
-        }
+    }
     
   } 
   else 
@@ -88,12 +89,14 @@ void switch_state(const int sensor_pin, const int controller_pin)
       delete_th(main_app_th);
       delete_th(http_th);
 
+      create_th(main_app, "main_app", MAIN_APP_TH_STACK_SIZE, &main_app_th, 1);
+
   
       //create http thread
       //create main_app thread
     }
     
   }  
-  rfm95w_setup();
+//   rfm95w_setup();
   //create lora listener thread
 }

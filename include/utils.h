@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include "config.h"
+#include <stdio.h>
 
 #define cli_printf Serial.printf
 #define cli_print Serial.print

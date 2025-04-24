@@ -10,8 +10,6 @@
 char cli_buffer[CLI_BUFFER_SIZE];
 uint8_t cli_pos = 0;
 
-void print_help();
-
 /**
  * @brief Trim the newline characters from the end of a string.
  * @param str The string to trim.
@@ -71,9 +69,6 @@ void handle_cmd(const char* cmd)
         // ESP.restart();
         return;
     }
-    
-
-    cli_printf("Unknown command: %s\n", token);
 }
 
 /**

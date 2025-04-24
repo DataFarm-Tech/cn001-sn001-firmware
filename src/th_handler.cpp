@@ -27,6 +27,7 @@ void create_th(TaskFunction_t func, const char* name, int stack_size, TaskHandle
 {
     if (*th == NULL) 
     {
+        printf("enter\n");
         xTaskCreatePinnedToCore(func, name, stack_size, NULL, 1, th, core);   
     } 
     else 
