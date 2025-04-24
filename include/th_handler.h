@@ -5,6 +5,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#define PROC_CS_TH_STACK_SIZE 10000
+#define READ_SERIAL_CLI_TH_STACK_SIZE 10000
+#define LORA_LISTENER_TH_STACK_SIZE 10000
+#define MAIN_APP_TH_STACK_SIZE 10000
+#define HTTP_TH_STACK_SIZE 10000
+
 extern TaskHandle_t read_serial_cli_th; //thread handler for CLI thread
 extern TaskHandle_t process_state_ch_th;
 extern TaskHandle_t lora_listener_th;
@@ -12,7 +18,7 @@ extern TaskHandle_t main_app_th;
 extern TaskHandle_t http_th;
 
 
-void create_th(TaskFunction_t func, const char* name, TaskHandle_t* th, int core);
+void create_th(TaskFunction_t func, const char* name, int stack_size, TaskHandle_t* th, int core);
 void delete_th(TaskHandle_t th);
 
 #endif // TH_HANDLER_H

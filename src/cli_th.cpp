@@ -12,6 +12,8 @@
 char cli_buffer[CLI_BUFFER_SIZE];
 uint8_t cli_pos = 0;
 
+void print_help();
+
 /**
  * @brief Trim the newline characters from the end of a string.
  * @param str The string to trim.

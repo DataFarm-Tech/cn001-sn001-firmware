@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "utils.h"
 
 /**
  * These are the thread handlers for the different threads in the system.
@@ -8,7 +9,7 @@
  * The threads are responsible for different tasks in the system, such as reading
  * serial input, processing state changes, and handling LoRa communication.
  */
-TaskHandle_t read_serial_cli_th = NULL; //thread handler for CLI thread
+TaskHandle_t read_serial_cli_th = NULL;
 TaskHandle_t process_state_ch_th = NULL;
 TaskHandle_t lora_listener_th = NULL;
 TaskHandle_t main_app_th = NULL;
@@ -22,15 +23,15 @@ TaskHandle_t http_th = NULL;
  * @param core - The core to which the thread should be pinned
  * @return None
  */
-void create_th(TaskFunction_t func, const char* name, TaskHandle_t* th, int core)
+void create_th(TaskFunction_t func, const char* name, int stack_size, TaskHandle_t* th, int core)
 {
     if (*th == NULL) 
     {
-        xTaskCreatePinnedToCore(func, name, 10000, NULL, 1, th, core);   
+        xTaskCreatePinnedToCore(func, name, stack_size, NULL, 1, th, core);   
     } 
     else 
     {
-        printf("Thread %s already exists\n", name);
+        PRINT_ERROR("Thread already exists.");
     }
 }
 
@@ -43,14 +44,13 @@ void delete_th(TaskHandle_t th)
 {
     if (th != NULL) 
     {
-        const char* name = pcTaskGetName(th);
+        PRINT_INFO("Thread deleted");
         vTaskDelete(th);
 
-        printf("Thread %s deleted\n", name);
         th = NULL; // Set the pointer to NULL after deletion
     }
     else 
     {
-        printf("Thread is not init...\n");
+        PRINT_WARNING("Thread has not been init...");
     }
 }

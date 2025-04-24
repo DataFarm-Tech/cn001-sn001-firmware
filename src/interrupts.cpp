@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "interrupts.h"
+#include "th_handler.h"
 #include "init.h"
 #include "utils.h"
 #include "hw.h"
@@ -65,12 +66,15 @@ void switch_state(const int sensor_pin, const int controller_pin)
   {
     if (current_state != SENSOR_STATE)
     {
-      PRINT_INFO("Switching to sensor state\n");
-      current_state = SENSOR_STATE;
-      
-      //delete all threads, except CLI and state change thread
-      //do rs485 pin setup
-    }
+        PRINT_INFO("Switching to sensor state\n");
+        current_state = SENSOR_STATE;
+        
+        delete_th(lora_listener_th);      
+        delete_th(main_app_th);
+        delete_th(http_th);      
+        
+        //do rs485 pin setup
+        }
     
   } 
   else 
@@ -80,13 +84,16 @@ void switch_state(const int sensor_pin, const int controller_pin)
       PRINT_INFO("Switching to controller state\n");
       current_state = CONTROLLER_STATE;
       
-      //delete all threads, except CLI and state change thread
+      delete_th(lora_listener_th);      
+      delete_th(main_app_th);
+      delete_th(http_th);
+
   
       //create http thread
       //create main_app thread
     }
     
   }  
-  // rfm95w_setup();
+  rfm95w_setup();
   //create lora listener thread
 }
