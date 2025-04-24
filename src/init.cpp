@@ -8,7 +8,10 @@
 
 TaskHandle_t read_serial_cli_th; //thread handler for CLI thread
 TaskHandle_t process_state_ch_th;
-volatile device_state_t current_state = CONTROLLER_STATE;
+volatile device_state_t current_state = UNDEFINED_STATE;
+
+int sensor_pin = 0;
+int controller_pin = 0;
 
 /**
  * @brief This thread is the first to run and initializes the system.
@@ -19,9 +22,6 @@ volatile device_state_t current_state = CONTROLLER_STATE;
  */
 void init_p()
 {
-  int sensor_pin = 0;
-  int controller_pin = 0;
-
   Serial.begin(BAUD_RATE);
   sleep(5);
   printf("init_p: Starting initialization...\n");

@@ -63,25 +63,28 @@ void switch_state(const int sensor_pin, const int controller_pin)
   
   if (sensor_pin == LOW && controller_pin == HIGH) 
   {
-    if(current_state == SENSOR_STATE) return;
-    PRINT_INFO("Switching to sensor state\n");
-    current_state = SENSOR_STATE;
-    
-    //delete all threads, except CLI and state change thread
-
-    //do rs485 pin setup
+    if (current_state != SENSOR_STATE)
+    {
+      PRINT_INFO("Switching to sensor state\n");
+      current_state = SENSOR_STATE;
+      
+      //delete all threads, except CLI and state change thread
+      //do rs485 pin setup
+    }
     
   } 
   else 
   {
-    if(current_state == CONTROLLER_STATE) return;
-    PRINT_INFO("Switching to controller state\n");
-    current_state = CONTROLLER_STATE;
-
-    //delete all threads, except CLI and state change thread
-
-    //create http thread
-    //create main_app thread
+    if (current_state != CONTROLLER_STATE)
+    {
+      PRINT_INFO("Switching to controller state\n");
+      current_state = CONTROLLER_STATE;
+      
+      //delete all threads, except CLI and state change thread
+  
+      //create http thread
+      //create main_app thread
+    }
     
   }  
   rfm95w_setup();
