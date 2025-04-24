@@ -47,7 +47,7 @@ case "$action" in
 
     clean)
         echo "Cleaning build environment..."
-        sudo pio run -e compile -e flash --target clean
+        sudo pio run --target clean
         ;;
 
     *)
