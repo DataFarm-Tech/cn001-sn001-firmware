@@ -87,6 +87,6 @@ void switch_state(const int sensor_pin, const int controller_pin)
     }
     
   }  
-  rfm95w_setup();
+  // rfm95w_setup();
   //create lora listener thread
 }

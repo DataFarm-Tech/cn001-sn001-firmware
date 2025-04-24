@@ -5,9 +5,10 @@
 #include "interrupts.h"
 #include "config.h"
 #include "hw.h"
+#include "th_handler.h"
 
-TaskHandle_t read_serial_cli_th; //thread handler for CLI thread
-TaskHandle_t process_state_ch_th;
+// TaskHandle_t read_serial_cli_th; //thread handler for CLI thread
+// TaskHandle_t process_state_ch_th;
 volatile device_state_t current_state = UNDEFINED_STATE;
 
 int sensor_pin = 0;
@@ -38,9 +39,9 @@ void init_p()
   attachInterrupt(digitalPinToInterrupt(INT_STATE_PIN), has_state_changed, CHANGE);
   attachInterrupt(digitalPinToInterrupt(INT_STATE_PIN_2), has_state_changed, CHANGE);
   
-  xTaskCreatePinnedToCore(process_state_change, "process_state_change", 10000, NULL, 1, &process_state_ch_th, 0);
+  create_th(process_state_change, "process_state_change", &process_state_ch_th, 0);
   
   //CLI Thread creation.
   print_motd();
-  xTaskCreatePinnedToCore(read_serial_cli, "read_serial_cli", 10000, NULL, 1, &read_serial_cli_th, 1);
+  create_th(read_serial_cli, "read_serial_cli", &read_serial_cli_th, 1);
 }

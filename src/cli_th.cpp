@@ -2,6 +2,7 @@
 
 #include "cli_th.h"
 #include "config.h"
+#include "th_handler.h"
 
 #define cli_printf Serial.printf
 #define cli_print Serial.print
@@ -45,6 +46,7 @@ void handle_cmd(const char* cmd)
         cli_printf("  help - Show this help message\n");
         cli_printf("  exit - Exit the CLI\n");
         cli_printf("  reboot - Reboot This Device\n");
+        cli_printf("  stop-cli - Stop the CLI thread\n");
         return;
     }
 
@@ -61,6 +63,16 @@ void handle_cmd(const char* cmd)
         cli_print("CLI Triggered Reboot\n");
         delay(1000);
         ESP.restart();
+        return;
+    }
+
+    /* I have added this command, to check whether delete_th can work.*/
+    if (strncmp(token, "stop-cli", sizeof(token)) == 0)
+    {
+        cli_print("CLI stopping...\n");
+        delay(1000);
+        delete_th(read_serial_cli_th); // Delete the CLI thread
+        // ESP.restart();
         return;
     }
     
