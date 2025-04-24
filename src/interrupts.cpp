@@ -89,6 +89,8 @@ void switch_state(const int sensor_pin, const int controller_pin)
       delete_th(main_app_th);
       delete_th(http_th);
 
+      sleep(2);
+
       create_th(main_app, "main_app", MAIN_APP_TH_STACK_SIZE, &main_app_th, 1);
 
   

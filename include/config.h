@@ -2,7 +2,6 @@
 #define CONFIG_H
 
 #define ID "87hDDD" //if ID is never defined in compilation process, it will be set to "UNDEFINED"
-//TODO: add better var naming docs
 #define BAUD_RATE 115200
 
 #define EXIT_SUCCESS 0
