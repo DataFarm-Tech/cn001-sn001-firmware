@@ -3,9 +3,7 @@
 #include "cli_th.h"
 #include "config.h"
 #include "th_handler.h"
-
-#define cli_printf Serial.printf
-#define cli_print Serial.print
+#include "utils.h"
 
 #define CLI_BUFFER_SIZE 128
 
