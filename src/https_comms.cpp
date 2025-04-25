@@ -46,35 +46,38 @@ void http_send(void* parameter)
 {
     msg cur_msg;
 
-    // Lock the mutex before accessing the queue
-    queue_mutex.lock();
+    // display the core on which the thread is running
+    int core = xPortGetCoreID();
+    Serial.print("HTTP thread is running on Core ");
+    Serial.println(core);
 
-    while (1){
-        if (!internal_msg_q.empty()){ //TODO: Add mutex
-            
+    
 
+    while(1) 
+    {
+        // Lock the mutex before accessing the queue
+        queue_mutex.lock();
+
+        if (!internal_msg_q.empty())
+        {
+            cur_msg = internal_msg_q.front();
+            internal_msg_q.pop();
+            // Unlock the mutex after accessing the queue
+            queue_mutex.unlock();
+
+            PRINT_STR("executing api post request");
+            printf("\tsrc_node: %s    des_node: %s\n", cur_msg.src_node, cur_msg.des_node);
+            node_id = cur_msg.src_node;
+            send_data(cur_msg.data);
+        }else {
+
+            // If queue was empty, don't forget to unlock!
+            queue_mutex.unlock();
+            Serial.println("Queue is empty, waiting...");
         }
-        int core = xPortGetCoreID();
-        Serial.print("HTTP thread is running on Core ");
-        Serial.println(core);
-
-        sleep(3);
-
-    }
-    // while(1) 
-    // {
-    //     if (!internal_msg_q.empty()) //TODO: Add mutex to prevent race conditions with lora_listener
-    //     {
-    //         cur_msg = internal_msg_q.front();
-    //         PRINT_STR("executing api post request");
-    //         printf("\tsrc_node: %s    des_node: %s\n", cur_msg.src_node, cur_msg.des_node);
-    //         node_id = cur_msg.src_node;
-    //         send_data(cur_msg.data);
-    //         internal_msg_q.pop();
-    //     }
         
-    //     vTaskDelay(pdMS_TO_TICKS(1000));
-    // }
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
 
     vTaskDelete(NULL);
 }
@@ -88,17 +91,18 @@ void send_data(rs485_data data)
 {
     // Array of labels and corresponding data values
     int data_values[] = {data.rs485_humidity, data.rs485_temp, data.rs485_con, data.rs485_nit, data.rs485_pot, data.rs485_phos, data.rs485_ph};
-    int success;
+    int success = -1; // Initialize success variable to -1
 
     // Loop through the labels and data values
     for (int i = 0; i < sizeof(data_values); i++) 
     {
-        success = -1;
+
+        success = post_request(labels[i], data_values[i]);
 
         while (success == -1 || success == -2)
         {
-            success = post_request(labels[i], data_values[i]);
             PRINT_STR("POST request failed");
+            success = post_request(labels[i], data_values[i]);
         }
         PRINT_STR("POST request sent");
         
