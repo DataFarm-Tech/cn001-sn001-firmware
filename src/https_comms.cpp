@@ -46,6 +46,9 @@ void http_send(void* parameter)
 {
     msg cur_msg;
 
+    // Lock the mutex before accessing the queue
+    queue_mutex.lock();
+
     while (1){
         if (!internal_msg_q.empty()){ //TODO: Add mutex
             
