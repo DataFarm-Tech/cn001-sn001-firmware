@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "cmd.h"
 #include "msg_queue.h"
-#include "th_handler.h"
+#include "th/th_handler.h"
 #include "utils.h"
 #include <WiFi.h>
 #include <ESP32Ping.h>
@@ -10,7 +10,8 @@
 /**
  * @brief A command to show the help text
  */
-void cmd_help() {
+void cmd_help() 
+{
     cli_printf("Available commands:\n");
     cli_printf("  help    - Show this help message\n");
     cli_printf("  exit    - Exit the CLI\n");
@@ -24,19 +25,21 @@ void cmd_help() {
 /**
  * @brief A command to exit the CLI (deleting the CLI thread)
  */
-void cmd_exit() {
+void cmd_exit() 
+{
     cli_print("Exiting CLI...\n");
     delay(1000);
     delete_th(read_serial_cli_th);
-    // ESP.restart(); // if needed
 }
 
 /**
  * @brief A command to clear the screen. A bit of a hack
  * Only does 50 carraige returns.
  */
-void cmd_clear() {
-    for (int i = 0; i < 50; i++) {
+void cmd_clear() 
+{
+    for (int i = 0; i < 50; i++) 
+    {
         cli_print("\n");
     }
 }
@@ -64,28 +67,34 @@ void cmd_time()
  */
 void cmd_threads()
 {
-        cli_printf("=== Thread Status ===\n");
-    
-        if (read_serial_cli_th != NULL) {
-            cli_printf("read_serial_cli_th: Running\n");
-        }
-    
-        if (process_state_ch_th != NULL) {
-            cli_printf("process_state_ch_th: Running\n");
-        }
-    
-        if (lora_listener_th != NULL) {
-            cli_printf("lora_listener_th: Running\n");
-        }
-    
-        if (main_app_th != NULL) {
-            cli_printf("main_app_th: Running\n");
-        }
-    
-        if (http_th != NULL) {
-            cli_printf("http_th: Running\n");
-        }
-    
+    cli_printf("=== Thread Status ===\n");
+
+    if (read_serial_cli_th != NULL) 
+    {
+        cli_printf("read_serial_cli_th: Running\n");
+    }
+
+    if (process_state_ch_th != NULL) 
+    {
+        cli_printf("process_state_ch_th: Running\n");
+    }
+
+    if (lora_listener_th != NULL) 
+    {
+        cli_printf("lora_listener_th: Running\n");
+    }
+
+    if (main_app_th != NULL) 
+    {
+        cli_printf("main_app_th: Running\n");
+    }
+
+    if (http_th != NULL) 
+    {
+        cli_printf("http_th: Running\n");
+    }
+
+    return;
 }
 
 /**
@@ -93,6 +102,12 @@ void cmd_threads()
  */
 void cmd_ping(const char* host)
 {
+    if (host == NULL) 
+    {
+        printf("Error: ping requires a host argument.\n");
+        return;
+    }
+
     if (WiFi.status() != WL_CONNECTED)
     {
         printf("Not connected to Wifi...\n");
@@ -124,7 +139,8 @@ void cmd_ping(const char* host)
 /**
  * @brief This command reboots the esp32
  */
-void cmd_reboot() {
+void cmd_reboot() 
+{
     cli_print("CLI Triggered Reboot\n");
     delay(1000);
     ESP.restart();
@@ -134,12 +150,14 @@ void cmd_reboot() {
  * @brief This command shows the size of the queue and the elements
  * in it.
  */
-void cmd_queue() {
+void cmd_queue() 
+{
     queue_mutex.lock();
     
     cli_printf("Queue size: %zu\n", internal_msg_q.size());
 
-    if (internal_msg_q.empty()) {
+    if (internal_msg_q.empty()) 
+    {
         cli_print("Queue is empty.\n");
         queue_mutex.unlock();
         return;
@@ -148,7 +166,8 @@ void cmd_queue() {
     int index = 0;
     size_t size = internal_msg_q.size();
 
-    for (size_t i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) 
+    {
         msg m = internal_msg_q.front();
         cli_printf("  [%d] src_node: %s, des_node: %s\n", index++, m.src_node.c_str(), m.des_node.c_str());
 

@@ -1,11 +1,11 @@
 #include <Arduino.h>
 
 #include "interrupts.h"
-#include "th_handler.h"
+#include "th/th_handler.h"
 #include "init.h"
 #include "utils.h"
 #include "hw.h"
-#include "main_app.h"
+#include "main_app/main_app.h"
 #include "https_comms.h"
 #include "msg_queue.h"
 #include "ntp/ntp.h"
@@ -67,7 +67,7 @@ void switch_state(const int sensor_pin, const int controller_pin)
 {
     tear_down(); //remove all threads and reset the Q
     
-    rfm95w_setup();
+    // rfm95w_setup();
     // create lora listener thread
   
     if (sensor_pin == LOW && controller_pin == HIGH) 

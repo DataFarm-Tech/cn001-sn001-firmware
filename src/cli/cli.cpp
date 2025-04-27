@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <mutex>
 
-#include "cli_th.h"
+#include "cli/cli.h"
 #include "config.h"
-#include "th_handler.h"
+#include "th/th_handler.h"
 #include "utils.h"
 #include "msg_queue.h"
 #include "cmd/cmd.h"
@@ -39,24 +39,26 @@ void print_prompt() {
     cli_printf("%s> ", ID);
 }
 
-void handle_cmd(const char* cmd) {
-    cli_printf("\n");
 
-    char cmd_copy[BUFFER_SIZE];
-    strncpy(cmd_copy, cmd, BUFFER_SIZE);
-    cmd_copy[BUFFER_SIZE - 1] = '\0';
-
-    char* token = strtok(cmd_copy, " ");
+/**
+ * @brief The following function takes a string.
+ * And calls get_best_enum on the string, which returns a cli_cmd
+ * enum. Then calls respective function.
+ */
+void handle_cmd(char* cmd) 
+{
+    char* token = strtok(cmd, " ");
     if (token == nullptr) return;
-
+    
     trim_newline(token);
-
+    
     cli_cmd cmd_input = get_best_enum(token);
-
-    // Get the second argument (e.g., for "ping google.com", this will be "google.com")
+    
     char* arg = strtok(nullptr, " ");
+    
+    cli_printf("\n");
     if (arg) trim_newline(arg);
-
+    
     switch (cmd_input) 
     {
         case CMD_HELP:
@@ -72,14 +74,7 @@ void handle_cmd(const char* cmd) {
             cmd_queue();
             break;
         case CMD_PING:
-            if (arg == NULL) 
-            {
-                cli_printf("Error: ping requires a host argument.\n");
-            } 
-            else 
-            {
-                cmd_ping(arg);
-            }
+            cmd_ping(arg);
             break;
         case CMD_CLEAR:
             cmd_clear();
@@ -99,18 +94,27 @@ void handle_cmd(const char* cmd) {
 }
 
 
-
-void read_serial_cli(void* param) {
+/**
+ * @brief The following function is an active thread that
+ * retrieves data via the Serial console. Once a carraige return
+ * is provided the thread calls handle_cmd.
+ */
+void read_serial_cli(void* param) 
+{
     print_prompt();
 
-    while (true) {
+    while (true) 
+    {
         bool processedCommand = false;
 
-        while (Serial.available()) {
+        while (Serial.available()) 
+        {
             char c = Serial.read();
 
-            if (c == '\b' || c == 127) {
-                if (cli_pos > 0) {
+            if (c == '\b' || c == 127) 
+            {
+                if (cli_pos > 0) 
+                {
                     cli_pos--;
                     cli_buffer[cli_pos] = '\0';
                     cli_print("\b \b");
@@ -118,9 +122,11 @@ void read_serial_cli(void* param) {
                 continue;
             }
 
-            if (c == '\r' || c == '\n') {
+            if (c == '\r' || c == '\n') 
+            {
                 cli_buffer[cli_pos] = '\0';
-                if (cli_pos > 0) {
+                if (cli_pos > 0) 
+                {
                     handle_cmd(cli_buffer);
                     cli_pos = 0;
                     processedCommand = true;
@@ -128,13 +134,15 @@ void read_serial_cli(void* param) {
                 continue;
             }
 
-            if (cli_pos < BUFFER_SIZE - 1 && isprint(c)) {
+            if (cli_pos < BUFFER_SIZE - 1 && isprint(c)) 
+            {
                 cli_buffer[cli_pos++] = c;
                 cli_print(c);
             }
         }
 
-        if (processedCommand) {
+        if (processedCommand) 
+        {
             print_prompt();
             processedCommand = false;
         }
@@ -143,6 +151,10 @@ void read_serial_cli(void* param) {
     }
 }
 
-void print_motd() {
+/**
+ * @brief The following function prints the MOTD.
+ */
+void print_motd() 
+{
     cli_printf("Welcome to the DataFarm CLI!\n\n");
 }
