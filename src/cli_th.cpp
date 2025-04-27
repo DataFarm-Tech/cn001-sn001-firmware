@@ -8,28 +8,14 @@
 #include "msg_queue.h"
 #include "cmd/cmd.h"
 
-
-// 1. Define the enum
-typedef enum {
-    CMD_HELP,
-    CMD_EXIT,
-    CMD_REBOOT,
-    CMD_QUEUE,
-    CMD_PING,
-    CMD_CLEAR,
-    CMD_THREADS,
-    CMD_TIME,
-    CMD_UNKNOWN
-} cli_cmd;
-
-
-
-
-
 char cli_buffer[BUFFER_SIZE];
 uint8_t cli_pos = 0;
 
-cli_cmd parse_command(const char* token) 
+/**
+ * @brief The following function takes a string
+ * and returns a cli_cmd type dependent on the str
+ */
+cli_cmd get_best_enum(const char* token) 
 {
     if (strncmp(token, "help", sizeof(token)) == 0) return CMD_HELP;
     if (strncmp(token, "exit", sizeof(token)) == 0) return CMD_EXIT;
@@ -65,7 +51,7 @@ void handle_cmd(const char* cmd) {
 
     trim_newline(token);
 
-    cli_cmd cmd_input = parse_command(token);
+    cli_cmd cmd_input = get_best_enum(token);
 
     // Get the second argument (e.g., for "ping google.com", this will be "google.com")
     char* arg = strtok(nullptr, " ");
@@ -86,9 +72,12 @@ void handle_cmd(const char* cmd) {
             cmd_queue();
             break;
         case CMD_PING:
-            if (arg == NULL) {
+            if (arg == NULL) 
+            {
                 cli_printf("Error: ping requires a host argument.\n");
-            } else {
+            } 
+            else 
+            {
                 cmd_ping(arg);
             }
             break;

@@ -66,6 +66,9 @@ void process_state_change(void *param)
 void switch_state(const int sensor_pin, const int controller_pin) 
 {
     tear_down(); //remove all threads and reset the Q
+    
+    rfm95w_setup();
+    // create lora listener thread
   
     if (sensor_pin == LOW && controller_pin == HIGH) 
     {
@@ -99,8 +102,6 @@ void switch_state(const int sensor_pin, const int controller_pin)
         }
     }
 
-    // rfm95w_setup();
-    // create lora listener thread
 }
 
 /**
