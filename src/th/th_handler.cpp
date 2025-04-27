@@ -40,14 +40,14 @@ void create_th(TaskFunction_t func, const char* name, int stack_size, TaskHandle
  * @param th - The thread handle to be deleted
  * @return None
  */
-void delete_th(TaskHandle_t th)
+void delete_th(TaskHandle_t* th)
 {
-    if (th != NULL) 
+    if (*th != NULL) 
     {
-        vTaskDelete(th);
+        vTaskDelete(*th);
         PRINT_INFO("Thread deleted");
 
-        th = NULL; // Set the pointer to NULL after deletion
+        *th = NULL; // Set the pointer to NULL after deletion
     }
     else 
     {

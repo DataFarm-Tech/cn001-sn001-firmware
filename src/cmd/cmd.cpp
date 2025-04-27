@@ -6,6 +6,7 @@
 #include <WiFi.h>
 #include <ESP32Ping.h>
 #include "ntp/ntp.h"
+#include "interrupts.h"
 
 /**
  * @brief A command to show the help text
@@ -29,7 +30,7 @@ void cmd_exit()
 {
     cli_print("Exiting CLI...\n");
     delay(1000);
-    delete_th(read_serial_cli_th);
+    delete_th(&read_serial_cli_th);
 }
 
 /**
@@ -55,7 +56,6 @@ void cmd_time()
 
     if (!get_sys_time(&currentTime))
     {
-        printf("Unable to get sys time\n");
         return;
     }
 
@@ -144,6 +144,15 @@ void cmd_reboot()
     cli_print("CLI Triggered Reboot\n");
     delay(1000);
     ESP.restart();
+}
+
+/**
+ * @brief This command reboots the esp32
+ */
+void cmd_teardown() 
+{
+    cli_print("Cleaning up threads and Q\n");
+    tear_down();
 }
 
 /**

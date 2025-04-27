@@ -10,6 +10,12 @@
 #include "msg_queue.h"
 #include "ntp/ntp.h"
 
+/**
+ * Adding this macro to en/dis for development
+ * reasons, since there is no interupt pins on the 
+ * devices with LoRa modules.
+ */
+#define LORA_EN 0
 
 volatile unsigned long last_interrupt_time = 0;
 volatile bool state_change_detected = false;
@@ -23,7 +29,6 @@ void tear_down();
  */
 void IRAM_ATTR has_state_changed() 
 {
-    // Simple debouncing to prevent multiple triggers
     if ((millis() - last_interrupt_time) > 50) 
     {
         state_change_detected = true;
@@ -52,7 +57,7 @@ void process_state_change(void *param)
             state_change_detected = false;
         }
         
-        vTaskDelay(10 / portTICK_PERIOD_MS);  // Add this line to yield every 10ms
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
     vTaskDelete(NULL); // Delete the task when done
@@ -65,10 +70,13 @@ void process_state_change(void *param)
  */
 void switch_state(const int sensor_pin, const int controller_pin) 
 {
-    tear_down(); //remove all threads and reset the Q
-    
-    // rfm95w_setup();
-    // create lora listener thread
+    tear_down();
+
+    #if LORA_EN == 1
+        rfm95w_setup();
+        //start lora thread
+    #endif
+
   
     if (sensor_pin == LOW && controller_pin == HIGH) 
     {
@@ -90,6 +98,8 @@ void switch_state(const int sensor_pin, const int controller_pin)
             wifi_connect();
 
             create_th(http_send, "http_th", HTTP_TH_STACK_SIZE, &http_th, 0); // core 0 is used for network related tasks
+
+            init_time_client_mutex();
             
             if (!start_sys_time()) 
             {
@@ -111,13 +121,17 @@ void switch_state(const int sensor_pin, const int controller_pin)
  */
 void tear_down() 
 {
-    delete_th(lora_listener_th);      
-    delete_th(main_app_th);
-    delete_th(http_th);
+    close_sys_time();
+
+    delete_th(&lora_listener_th);      
+    delete_th(&main_app_th);
+    delete_th(&http_th);
     
     queue_mutex.lock();
     while (!internal_msg_q.empty()) internal_msg_q.pop();
     queue_mutex.unlock();
+    
+    //point the lora rfm object's mutex to NULL
     
     sleep(2);
     return;

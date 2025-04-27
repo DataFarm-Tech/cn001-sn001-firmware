@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "msg_queue.h"
 #include "cmd/cmd.h"
+#include "interrupts.h"
 
 char cli_buffer[BUFFER_SIZE];
 uint8_t cli_pos = 0;
@@ -24,6 +25,7 @@ cli_cmd get_best_enum(const char* token)
     if (strncmp(token, "ping", sizeof(token)) == 0) return CMD_PING;
     if (strncmp(token, "threads", sizeof(token)) == 0) return CMD_THREADS;
     if (strncmp(token, "time", sizeof(token)) == 0) return CMD_TIME;
+    if (strncmp(token, "teardown", sizeof(token)) == 0) return CMD_TEARDOWN;
     if (strncmp(token, "clear", sizeof(token)) == 0) return CMD_CLEAR;
     return CMD_UNKNOWN;
 }
@@ -84,6 +86,9 @@ void handle_cmd(char* cmd)
             break;
         case CMD_TIME:
             cmd_time();
+            break;
+        case CMD_TEARDOWN:
+            cmd_teardown();
             break;
             
         case CMD_UNKNOWN:
