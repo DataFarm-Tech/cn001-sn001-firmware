@@ -18,5 +18,4 @@ extern TaskHandle_t http_th;
 
 //Function definitions
 void create_th(TaskFunction_t func, const char* name, int stack_size, TaskHandle_t* th, int core);
-void delete_th(TaskHandle_t th);
-void print_all_threads_detailed();
+void delete_th(TaskHandle_t* th);

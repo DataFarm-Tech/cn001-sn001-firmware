@@ -1,13 +1,18 @@
 #include <Arduino.h>
 #include "cmd.h"
 #include "msg_queue.h"
-#include "th_handler.h"
+#include "th/th_handler.h"
 #include "utils.h"
 #include <WiFi.h>
 #include <ESP32Ping.h>
+#include "ntp/ntp.h"
+#include "interrupts.h"
 
-
-void cmd_help() {
+/**
+ * @brief A command to show the help text
+ */
+void cmd_help() 
+{
     cli_printf("Available commands:\n");
     cli_printf("  help    - Show this help message\n");
     cli_printf("  exit    - Exit the CLI\n");
@@ -18,81 +23,150 @@ void cmd_help() {
     cli_printf(" threads - Shows the active threads\n");
 }
 
-void cmd_exit() {
+/**
+ * @brief A command to exit the CLI (deleting the CLI thread)
+ */
+void cmd_exit() 
+{
     cli_print("Exiting CLI...\n");
     delay(1000);
-    delete_th(read_serial_cli_th);
-    // ESP.restart(); // if needed
+    delete_th(&read_serial_cli_th);
 }
 
-
-void cmd_clear() {
-    for (int i = 0; i < 50; i++) {
+/**
+ * @brief A command to clear the screen. A bit of a hack
+ * Only does 50 carraige returns.
+ */
+void cmd_clear() 
+{
+    for (int i = 0; i < 50; i++) 
+    {
         cli_print("\n");
     }
 }
 
-void cmd_threads()
+
+/**
+ * @brief A command to show the current sys time.
+ * This time is the NTP time, being retrieved by the NTP client.
+ */
+void cmd_time()
 {
-        cli_printf("=== Thread Status ===\n");
-    
-        if (read_serial_cli_th != NULL) {
-            cli_printf("read_serial_cli_th: Running\n");
-        }
-    
-        if (process_state_ch_th != NULL) {
-            cli_printf("process_state_ch_th: Running\n");
-        }
-    
-        if (lora_listener_th != NULL) {
-            cli_printf("lora_listener_th: Running\n");
-        }
-    
-        if (main_app_th != NULL) {
-            cli_printf("main_app_th: Running\n");
-        }
-    
-        if (http_th != NULL) {
-            cli_printf("http_th: Running\n");
-        }
+    uint32_t currentTime;
+
+    if (!get_sys_time(&currentTime))
+    {
+        return;
+    }
+
+    printf("time: %d\n", currentTime);
     
 }
+/**
+ * @brief The following cmd shows all the active threads
+ */
+void cmd_threads()
+{
+    cli_printf("=== Thread Status ===\n");
 
+    if (read_serial_cli_th != NULL) 
+    {
+        cli_printf("read_serial_cli_th: Running\n");
+    }
 
+    if (process_state_ch_th != NULL) 
+    {
+        cli_printf("process_state_ch_th: Running\n");
+    }
+
+    if (lora_listener_th != NULL) 
+    {
+        cli_printf("lora_listener_th: Running\n");
+    }
+
+    if (main_app_th != NULL) 
+    {
+        cli_printf("main_app_th: Running\n");
+    }
+
+    if (http_th != NULL) 
+    {
+        cli_printf("http_th: Running\n");
+    }
+
+    return;
+}
+
+/**
+ * @brief the following command pings a given host
+ */
 void cmd_ping(const char* host)
 {
+    if (host == NULL) 
+    {
+        printf("Error: ping requires a host argument.\n");
+        return;
+    }
 
     if (WiFi.status() != WL_CONNECTED)
     {
         printf("Not connected to Wifi...\n");
         return;
     }
-    
-    
-    printf("\n[PING]: Pinging %s...\n", host);
 
-    if (Ping.ping(host), 5) 
+    // Try to resolve the host name to an IP address
+    IPAddress resolved_ip;
+    if (!WiFi.hostByName(host, resolved_ip))
+    {
+        printf("[PING] DNS Failed for %s\n", host);
+        return;
+    }
+
+    printf("\n[PING]: Pinging %s (%s)...\n", host, resolved_ip.toString().c_str());
+
+    // Try pinging the resolved IP address 5 times
+    if (Ping.ping(resolved_ip, 5)) 
     {
         printf("[PING] Success! Avg time: %d ms\n", Ping.averageTime());
     } 
     else 
     {
-        printf("[PING] Failed.\n");
+        printf("[PING] Failed to reach %s.\n", host);
     }
 }
 
-void cmd_reboot() {
+
+/**
+ * @brief This command reboots the esp32
+ */
+void cmd_reboot() 
+{
     cli_print("CLI Triggered Reboot\n");
     delay(1000);
     ESP.restart();
 }
 
-void cmd_queue() {
+/**
+ * @brief This command reboots the esp32
+ */
+void cmd_teardown() 
+{
+    cli_print("Cleaning up threads and Q\n");
+    tear_down();
+}
+
+/**
+ * @brief This command shows the size of the queue and the elements
+ * in it.
+ */
+void cmd_queue() 
+{
     queue_mutex.lock();
     
     cli_printf("Queue size: %zu\n", internal_msg_q.size());
 
-    if (internal_msg_q.empty()) {
+    if (internal_msg_q.empty()) 
+    {
         cli_print("Queue is empty.\n");
         queue_mutex.unlock();
         return;
@@ -101,7 +175,8 @@ void cmd_queue() {
     int index = 0;
     size_t size = internal_msg_q.size();
 
-    for (size_t i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) 
+    {
         msg m = internal_msg_q.front();
         cli_printf("  [%d] src_node: %s, des_node: %s\n", index++, m.src_node.c_str(), m.des_node.c_str());
 
