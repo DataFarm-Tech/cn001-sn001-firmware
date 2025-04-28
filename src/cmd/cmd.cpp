@@ -21,6 +21,9 @@ void cmd_help()
     cli_printf("  ping [host]  - Ping a host\n");
     cli_printf("  clear - Clears the screen\n");
     cli_printf(" threads - Shows the active threads\n");
+    cli_printf(" ipconfig - Shows the network config\n");
+    cli_printf(" time - Shows the current NTP time\n");
+    cli_printf(" teardown - Removes all threads and clears queue\n");
 }
 
 /**
@@ -127,12 +130,30 @@ void cmd_ping(const char* host)
     // Try pinging the resolved IP address 5 times
     if (Ping.ping(resolved_ip, 5)) 
     {
-        printf("[PING] Success! Avg time: %d ms\n", Ping.averageTime());
+        printf("[PING] Success! Avg time: %f ms\n", Ping.averageTime());
     } 
     else 
     {
         printf("[PING] Failed to reach %s.\n", host);
     }
+}
+
+/**
+ * @brief The following command prints the networking information
+ */
+void cmd_ipconfig()
+{
+    // Print IPv4 Configuration
+    IPAddress ip = WiFi.localIP();
+    IPAddress subnet = WiFi.subnetMask();
+    IPAddress gateway = WiFi.gatewayIP();
+    IPAddress dns = WiFi.dnsIP();
+
+    printf("=== IPv4 Configuration ===\n");
+    printf("IP Address: %s\n", ip.toString().c_str());
+    printf("Subnet Mask: %s\n", subnet.toString().c_str());
+    printf("Gateway Address: %s\n", gateway.toString().c_str());
+    printf("DNS Server: %s\n", dns.toString().c_str());
 }
 
 

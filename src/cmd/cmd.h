@@ -12,6 +12,7 @@ typedef enum {
     CMD_THREADS,
     CMD_TIME,
     CMD_TEARDOWN,
+    CMD_IPCONFIG,
     CMD_UNKNOWN
 } cli_cmd;
 
@@ -24,3 +25,4 @@ void cmd_clear();
 void cmd_threads();
 void cmd_time();
 void cmd_teardown();
+void cmd_ipconfig();
