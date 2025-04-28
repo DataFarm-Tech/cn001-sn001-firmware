@@ -7,6 +7,7 @@
 #include "hw.h"
 #include "utils.h"
 #include "lora/lora_listener.h"
+#include "mh/mutex_h.h"
 
 /**
  * @brief This function initializes the hardware for the RFM95W module.
@@ -20,14 +21,6 @@ void rfm95w_setup()
   delay(10);
   digitalWrite(RFM95_RST, HIGH);
   delay(10);
-
-  // Create the mutex
-  rf95_mutex = xSemaphoreCreateMutex();
-  if (rf95_mutex == NULL) 
-  {
-      PRINT_ERROR("Failed to create rf95 mutex!");
-      return; // exit if mutex not created
-  }
 
   if (xSemaphoreTake(rf95_mutex, portMAX_DELAY) == pdTRUE)
   {

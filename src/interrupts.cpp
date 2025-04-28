@@ -8,12 +8,9 @@
 #include "main_app/main_app.h"
 #include "https_comms.h"
 #include "msg_queue.h"
-<<<<<<< HEAD
 #include "lora/lora_listener.h"
-=======
 #include "ntp/ntp.h"
 #include "mh/mutex_h.h"
->>>>>>> 825499e9e516a36d1a3044c0dd0a158c6dad1e09
 
 /**
  * Adding this macro to en/dis for development
