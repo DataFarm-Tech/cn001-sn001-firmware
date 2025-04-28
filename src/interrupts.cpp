@@ -96,7 +96,7 @@ void switch_state(const int sensor_pin, const int controller_pin)
             PRINT_INFO("Switching to controller state\n");
             current_state = CONTROLLER_STATE;
 
-            // wifi_connect();
+            wifi_connect();
 
             init_mutex(current_state);
             create_th(main_app, "main_app", MAIN_APP_TH_STACK_SIZE, &main_app_th, 1);
