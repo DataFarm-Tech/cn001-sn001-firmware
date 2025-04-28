@@ -35,22 +35,18 @@ void create_th(TaskFunction_t func, const char* name, int stack_size, TaskHandle
     }
 }
 
-/** 
- * @brief This function deletes a thread if it exists.
- * @param th - The thread handle to be deleted
- * @return None
- */
-void delete_th(TaskHandle_t th)
+void delete_th(TaskHandle_t* th)
 {
-    if (th != NULL) 
+    if (*th != NULL) 
     {
-        vTaskDelete(th);
+        vTaskDelete(*th);
         PRINT_INFO("Thread deleted");
 
-        th = NULL; // Set the pointer to NULL after deletion
+        *th = NULL; // Correctly set the global variable to NULL
     }
     else 
     {
         PRINT_WARNING("Thread has not been init...");
     }
 }
+

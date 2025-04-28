@@ -1,11 +1,11 @@
 #include <Arduino.h>
 
-#include "cli_th.h"
+#include "cli/cli.h"
 #include "init.h"
 #include "interrupts.h"
 #include "config.h"
 #include "hw.h"
-#include "th_handler.h"
+#include "th/th_handler.h"
 #include "https_comms.h"
 
 /*
