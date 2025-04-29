@@ -11,9 +11,6 @@
 
 #define BUFFER_SIZE 128
 
-char* constr_endp(const char* endpoint);
-void checkInternet();
-
 #define DEBUG() printf("%s: %d: %s\n", __func__, __LINE__, __FILE__)
 
 #define PRINT_STR(to_print) printf("[%s]: %s\n", ID, to_print)

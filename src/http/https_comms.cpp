@@ -18,9 +18,11 @@
 #define RSSI_LOW_STRENGTH -2
 
 /******************* Function Prototypes *****************/
-int post_request(const String& type, uint8_t data);
+int post_request(String jsonPayload);
 void http_send(void* parameter);
-void send_data(rs485_data data);
+void send_data(msg message);
+void checkInternet();
+char* constr_endp(const char* endpoint);
 
 /******************* Globals *****************/
 HTTPClient client;
@@ -54,10 +56,14 @@ void http_send(void* parameter)
     // http_th = NULL;
     // vTaskDelete(NULL);
 
-    //check internet connection
-    checkInternet();
-
     msg cur_msg;
+
+    add_msg_to_queue();
+
+    // display the core on which the thread is running
+    int core = xPortGetCoreID();
+    Serial.print("HTTP thread is running on Core ");
+    Serial.println(core);
 
     while(1) 
     {
@@ -71,13 +77,19 @@ void http_send(void* parameter)
             // Unlock the mutex after accessing the queue
             queue_mutex.unlock();
 
+            PRINT_STR("executing api post request");
+            printf("\tsrc_node: %s    des_node: %s\n", cur_msg.src_node, cur_msg.des_node);
+
             node_id = cur_msg.src_node;
-            // send_data(cur_msg.data);
+            send_data(cur_msg);
         }
         else 
         {
-            // If queue was empty, don't forget to unlock!
+            // If queue was empty, unlock the mutex and wait
             queue_mutex.unlock();
+
+            Serial.println("Queue is empty, waiting...");
+
         }
         
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -88,31 +100,56 @@ void http_send(void* parameter)
 
 /**
  * @brief This function sends the data to the controller API using the POST method.
- * @param data - The data to be sent to the controller API
+ * @param message - The data to be sent to the controller API
  * @return None
  */
-void send_data(rs485_data data)
-{
-    // Array of labels and corresponding data values
-    int data_values[] = {data.rs485_humidity, data.rs485_temp, data.rs485_con, data.rs485_nit, data.rs485_pot, data.rs485_phos, data.rs485_ph};
-    int success = -1; // Initialize success variable to -1
+void send_data(msg message) {
+    // Create a JSON document
+    JsonDocument doc; // Adjust size as needed
+  
+    // Add node_id (src_node)
+    doc["node_id"] = message.src_node;
+  
+    // Create the data array
+    JsonArray data = doc["data"].to<JsonArray>();
+  
+    // Helper function to add sensor data objects
+    auto addSensorData = [&data](const char* type, float value) {
+        JsonObject obj = data.add<JsonObject>();
+        obj["type"] = type;
+        obj["level1"] = value;
+        obj["level2"] = 0.0f; // Using float literal
+        obj["level3"] = 0.0f;
+    };
+  
+    // Add all sensor data
+    addSensorData("moisture", message.data.rs485_humidity / 1.0f);
+    addSensorData("ph", message.data.rs485_ph / 1.0f);
+    addSensorData("temperature", message.data.rs485_temp / 1.0f);
+    addSensorData("conductivity", message.data.rs485_con / 1.0f);
+    addSensorData("nitrogen", message.data.rs485_nit / 1.0f);
+    addSensorData("phosphorus", message.data.rs485_phos / 1.0f);
+    addSensorData("potassium", message.data.rs485_pot / 1.0f);
+  
+    // Serialize JSON to string
+    String jsonStr;
+    serializeJson(doc, jsonStr);
 
-    // Loop through the labels and data values
-    for (int i = 0; i < sizeof(data_values); i++) 
-    {
-
-        success = post_request(labels[i], data_values[i]);
-
-        while (success == -1 || success == -2)
-        {
-            PRINT_STR("POST request failed");
-            success = post_request(labels[i], data_values[i]);
-        }
-        PRINT_STR("POST request sent");
-        
-        delay(1000);
+    // Debug output
+    Serial.println("Sending JSON:");
+    Serial.println(jsonStr);
+  
+    // Send the POST request with the complete JSON
+    int success = post_request(jsonStr); // You'll need to modify your post_request function
+    
+    while (success == -1 || success == -2) {
+      PRINT_STR("POST request failed");
+      // Check if the host is reachable
+      checkInternet();
+      success = post_request(jsonStr);
     }
-}
+    PRINT_STR("POST request sent successfully");
+  }
 
 
 /**
@@ -121,7 +158,8 @@ void send_data(rs485_data data)
  * @return int - EXIT_SUCCESS on success, EXIT_FAILURE on failure
  */
 int init_http_client(const String& url)
-{
+{   
+    //TODO: check if url is NULL and handle it properly
     if (strncmp(API_KEY, "", sizeof(API_KEY)) == 0)
     {
         PRINT_STR("API key not initialized");
@@ -139,26 +177,92 @@ int init_http_client(const String& url)
 
 /**
  * @brief This function sends a POST request to the controller API with the given type and data.
- * @param type - The type of data being sent
- * @param data - The data value to be sent
+ * @param jsonPayload - The json payload  to be sent
  * @return int - The HTTP status code of the request
  */
-int post_request(const String& type, uint8_t data)
+int post_request(String jsonPayload)
 {
+    char * url;
     int http_code;
     String json_payload;
+
+    url = constr_endp(TX_POST_ENDPOINT); 
+
+    //TODO: check if url is NULL and handle it properly
+    if (url == NULL)
+    {
+        PRINT_STR("URL is NULL");
+        DEBUG();
+        return HOST_FAILED_PING;
+    }
     
-    init_http_client("badendpoint"); //Change this to the actual endpoint
+    init_http_client(url);
 
-    json_payload = "{\"node_id\":\"" + node_id + "\","
-                          "\"level1\":\"" + data + "\","
-                          "\"level2\":\"" + data + "\","
-                          "\"level3\":\"" + data + "\","
-                          "\"type\":\"" + type + "\"}";
-
+    printf("URL: %s\n", url);
+    // Check if the client is connected to the host
+    
     // Send the POST request with the JSON payload & close client connection.
-    http_code = client.POST(json_payload);
+    // http_code = client.POST(json_payload);
+    http_code = client.POST(jsonPayload);
+
+    //mock http_code for testing purposes
+    // http_code = HTTP_201_CREATED; //TODO: remove this line when testing is done
+    Serial.print("POSTING FROM NODE:");
+    Serial.print(" " +node_id);
+    PRINT_STR(json_payload);
     client.end();
 
     return http_code;
+}
+
+
+
+void checkInternet() {
+    const char* googleDNS = "google.com"; // Google DNS for internet check
+
+    // 1. Loop until WiFi connects
+    while (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi disconnected. Reconnecting...");
+        WiFi.reconnect();
+        delay(3000); // Prevents watchdog trigger
+    }
+
+    // 2. Loop until Google pings (confirms internet)
+    while (true) {
+        Serial.println("Pinging Google...");
+        if (Ping.ping(googleDNS, 5)) {
+            break;
+        }
+        Serial.println("Google ping failed. Retrying in 3s...");
+        delay(3000);
+    }
+
+    // 3. Loop until your server pings
+    while (true) {
+        Serial.println("Pinging df server server...");
+        if (Ping.ping(API_HOST, 5)) {
+            break;
+        }
+        Serial.println("Server ping failed. Retrying in 3s...");
+        delay(3000);
+    }
+}
+
+/**
+ * @brief Constructs the endpoint URL.
+ * @param endpoint The endpoint to be appended to the URL.
+ * @return char* - The constructed endpoint.
+ */
+char* constr_endp(const char* endpoint)
+{
+    static char endp[200];  // Static buffer to persist after function returns
+
+    if (strncmp(endpoint, "", sizeof(endpoint)) == 0)
+    {
+        PRINT_STR("Endpoint is empty");
+        return NULL;
+    }
+    
+    snprintf(endp, sizeof(endp), "http://%s:%s%s", API_HOST, API_PORT, endpoint);
+    return endp;
 }
