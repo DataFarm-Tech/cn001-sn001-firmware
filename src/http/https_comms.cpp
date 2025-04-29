@@ -57,28 +57,28 @@ void http_send(void* parameter)
     // vTaskDelete(NULL);
 
     msg cur_msg;
-
-    add_msg_to_queue();
+    //check internet connection
+    // add_msg_to_queue();
 
     // display the core on which the thread is running
     int core = xPortGetCoreID();
-    Serial.print("HTTP thread is running on Core ");
+    // Serial.print("HTTP thread is running on Core ");
     Serial.println(core);
 
     while(1) 
     {
         // Lock the mutex before accessing the queue
-        queue_mutex.lock();
-
-        if (!internal_msg_q.empty())
+        if (xSemaphoreTake(msg_queue_mh, portMAX_DELAY) == pdTRUE) 
+        {
+            if (!internal_msg_q.empty())
         {
             cur_msg = internal_msg_q.front();
             internal_msg_q.pop();
             // Unlock the mutex after accessing the queue
-            queue_mutex.unlock();
+            xSemaphoreGive(msg_queue_mh); // Release the mutex
 
-            PRINT_STR("executing api post request");
-            printf("\tsrc_node: %s    des_node: %s\n", cur_msg.src_node, cur_msg.des_node);
+            // PRINT_STR("executing api post request");
+            // printf("\tsrc_node: %s    des_node: %s\n", cur_msg.src_node, cur_msg.des_node);
 
             node_id = cur_msg.src_node;
             send_data(cur_msg);
@@ -86,13 +86,13 @@ void http_send(void* parameter)
         else 
         {
             // If queue was empty, unlock the mutex and wait
-            queue_mutex.unlock();
-
+            xSemaphoreGive(msg_queue_mh); // Release the mutex
             Serial.println("Queue is empty, waiting...");
-
         }
+        vTaskDelay(pdMS_TO_TICKS(3000));
+        }
+
         
-        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 
     vTaskDelete(NULL);
@@ -136,8 +136,8 @@ void send_data(msg message) {
     serializeJson(doc, jsonStr);
 
     // Debug output
-    Serial.println("Sending JSON:");
-    Serial.println(jsonStr);
+    // Serial.println("Sending JSON:");
+    // Serial.println(jsonStr);
   
     // Send the POST request with the complete JSON
     int success = post_request(jsonStr); // You'll need to modify your post_request function
@@ -198,7 +198,7 @@ int post_request(String jsonPayload)
     
     init_http_client(url);
 
-    printf("URL: %s\n", url);
+    // printf("URL: %s\n", url);
     // Check if the client is connected to the host
     
     // Send the POST request with the JSON payload & close client connection.
@@ -207,9 +207,9 @@ int post_request(String jsonPayload)
 
     //mock http_code for testing purposes
     // http_code = HTTP_201_CREATED; //TODO: remove this line when testing is done
-    Serial.print("POSTING FROM NODE:");
-    Serial.print(" " +node_id);
-    PRINT_STR(json_payload);
+    // Serial.print("POSTING FROM NODE:");
+    // Serial.print(" " +node_id);
+    // PRINT_STR(json_payload);
     client.end();
 
     return http_code;
@@ -241,6 +241,7 @@ void checkInternet() {
     while (true) {
         Serial.println("Pinging df server server...");
         if (Ping.ping(API_HOST, 5)) {
+            Serial.println("Server ping successful.");
             break;
         }
         Serial.println("Server ping failed. Retrying in 3s...");
