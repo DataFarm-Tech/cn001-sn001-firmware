@@ -182,28 +182,27 @@ void cmd_teardown()
  */
 void cmd_queue() 
 {
-    queue_mutex.lock();
+    if (xSemaphoreTake(msg_queue_mh, portMAX_DELAY) == pdTRUE) {
+        cli_printf("Queue size: %zu\n", internal_msg_q.size());
+        if (internal_msg_q.empty()) 
+        {
+            cli_print("Queue is empty.\n");
+            xSemaphoreGive(msg_queue_mh);
+            return;
+        }
+        int index = 0;
+        size_t size = internal_msg_q.size();
     
-    cli_printf("Queue size: %zu\n", internal_msg_q.size());
-
-    if (internal_msg_q.empty()) 
-    {
-        cli_print("Queue is empty.\n");
-        queue_mutex.unlock();
-        return;
+        for (size_t i = 0; i < size; ++i) 
+        {
+            msg m = internal_msg_q.front();
+            cli_printf("  [%d] src_node: %s, des_node: %s\n", index++, m.src_node.c_str(), m.des_node.c_str());
+    
+            internal_msg_q.pop();
+            internal_msg_q.push(m);  // Rotate to preserve order
+        }
+    
+        xSemaphoreGive(msg_queue_mh);
     }
 
-    int index = 0;
-    size_t size = internal_msg_q.size();
-
-    for (size_t i = 0; i < size; ++i) 
-    {
-        msg m = internal_msg_q.front();
-        cli_printf("  [%d] src_node: %s, des_node: %s\n", index++, m.src_node.c_str(), m.des_node.c_str());
-
-        internal_msg_q.pop();
-        internal_msg_q.push(m);  // Rotate to preserve order
-    }
-
-    queue_mutex.unlock();
 }
