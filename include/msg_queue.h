@@ -3,6 +3,8 @@
 #include <queue>
 #include <mutex>
 #include <Arduino.h>
+#include "config.h"
+#include "mh/mutex_h.h"
 
 typedef struct {
     uint8_t rs485_humidity;
@@ -21,4 +23,5 @@ typedef struct {
 } msg;
 
 extern std::queue<msg> internal_msg_q;  // declare the queue here
-extern std::mutex queue_mutex; // declare the mutex here
+
+void add_msg_to_queue();
