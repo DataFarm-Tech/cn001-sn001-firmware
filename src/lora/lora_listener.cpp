@@ -3,12 +3,14 @@
 #include <RH_RF95.h>
 #include <SPI.h>
 #include "hw.h"
+#include "config.h"
 
 RH_RF95 rf95(RFM95_NSS, RFM95_INT); // Create the rf95 obj
 
 /**
  * @brief The following thread listens for incoming
  * LoRa messages. It checks whether the packet is meant for itself.
+ * @param param
  */
 void lora_listener(void * param)
 {
@@ -53,5 +55,4 @@ void lora_listener(void * param)
         sleep(1); //doesnt do anything yet
         //this thread will add to the Q
     }
-    
 }
