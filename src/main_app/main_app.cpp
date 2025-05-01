@@ -5,11 +5,15 @@
 #include <WiFi.h>
 #include "th/th_handler.h"
 #include "interrupts.h"
+#include "msg_queue.h"
+#include "crc/crc.h"
 
 #define CONTROLLER_INTERVAL_SEC 28800 //change me to 60 for testing
 
 bool exec_flag = false;
 uint32_t last_run_time = 0;  // Store the last execution time in epoch format
+
+void app();
 
 void main_app(void *parm)
 {
@@ -37,6 +41,7 @@ void main_app(void *parm)
             exec_flag = true;
             PRINT_WARNING("Starting APP MAIN");
             //call function
+            app();
             last_run_time = currentTime;  // Set the initial time for the first execution
         }
         else
@@ -45,6 +50,7 @@ void main_app(void *parm)
             if (currentTime - last_run_time >= CONTROLLER_INTERVAL_SEC)  // 6 hours = 6 * 60 * 60 = 21600 seconds
             { 
                 PRINT_WARNING("Starting APP MAIN");
+                app();
                 //call function
                 last_run_time = currentTime;  // Update the last execution time
             }
@@ -52,6 +58,55 @@ void main_app(void *parm)
         
         sleep(1);
     }
+}
+
+
+void app()
+{
+    char * dest_node_id;
+    char * src_node_id;
+    int j;
+
+
+    if (node_count > 0)
+    {
+        src_node_id = ID;
+
+        for (int i = 0; i < node_count; i++)
+        {
+            uint8_t packet_to_send[LORA_DATA_LEN];
+            dest_node_id = node_list[i];
+
+            for (j = 0; j < ADDRESS_SIZE; j++)
+            {
+                packet_to_send[j] =  dest_node_id[j];
+            }
+
+            for (j = 0; j < ADDRESS_SIZE; j++)
+            {
+                packet_to_send[ADDRESS_SIZE + j] =  src_node_id[j];
+            }
+
+            for (j = ADDRESS_SIZE * 2; j < LORA_DATA_LEN - 2; j++)
+            {
+                packet_to_send[j] = 0;
+            }
+
+            calc_crc(packet_to_send, LORA_DATA_LEN - 2);
+            //send packet.
+            
+            
+            // // printf("data: %s\n", node_list[i]);
+
+            // for (int i = 0; i < LORA_DATA_LEN; i++)
+            // {
+            //     cli_printf("%02x ", packet_to_send[i]);
+            // }
+            
+        }
+    }
+    
+        
 }
 
 
