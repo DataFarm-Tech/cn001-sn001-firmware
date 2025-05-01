@@ -16,6 +16,8 @@ typedef enum {
     CMD_QADD,
     CMD_APPLY,
     CMD_KEY,
+    CMD_CLEAR_CONFIG,
+    CMD_LIST,
     CMD_UNKNOWN
 } cli_cmd;
 
@@ -31,3 +33,4 @@ void cmd_teardown();
 void cmd_ipconfig();
 void cmd_key();
 void cmd_add_queue();
+void cmd_node_list();

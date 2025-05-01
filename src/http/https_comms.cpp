@@ -9,6 +9,7 @@
 #include "msg_queue.h"
 #include "utils.h"
 #include "th/th_handler.h"
+#include "interrupts.h"
 
 /******************* Hash Defines *****************/
 
@@ -22,16 +23,24 @@
 #define PING_NUM 5
 
 /******************* Function Prototypes *****************/
+
+typedef enum
+{
+    POST,
+    GET
+} request_type;
+
 int post_request(String json_payload);
-void http_send(void* param);
 String construct_json_payload(msg message);
 void check_internet();
 char* constr_endp(const char* endpoint);
 void update_key(const char* new_key);
-void activate_controller();
+int init_http_client(const String& url, request_type type);
 
 /******************* Globals *****************/
 HTTPClient client;
+
+/******************* Function Definitions *****************/
 
 /**
  * @brief The following function takes a new key,
@@ -65,11 +74,17 @@ void activate_controller()
 
     serializeJson(doc, json_payload); //convert into a string
 
+    printf("json: %s\n", (String)json_payload);
+
     url = constr_endp(TX_ACT_ENDPOINT);
+    printf("url: %s\n", url);
 
     client.begin(url);
     client.addHeader("Content-Type", "application/json");
+    client.addHeader("accept", "application/json");
     http_code = client.POST(json_payload);
+
+    printf("code: %d\n", http_code);
 
     switch (http_code)
     {
@@ -97,8 +112,80 @@ void activate_controller()
     client.end();
 }
 
+/**
+ * @brief The following function calls the /user/get/node endpoint to retrieve 
+ *        the list of node IDs associated with the controller.
+ * TODO: Add the api_key header before running the GET request.
+ * TODO: Create a global list in the config variable, that holds the node list and the node count.
+ * TODO: Change this to a void instead of bool. In main app we will check if node_list is NULL. If it is then we delete the main_app thread.
+ */
+void get_nodes_list() 
+{
+    char url[150];
+    int http_code;
+    String response;
+    JsonDocument doc;
+    int success;
+    
+    // Construct the endpoint URL with query parameter
+    snprintf(url, sizeof(url), "%s?controller_id=%s", constr_endp(TX_GET_ENDPOINT), ID);
 
-/******************* Function Definitions *****************/
+    if (init_http_client(url, GET) == EXIT_FAILURE)
+    {
+        PRINT_ERROR("Unable to initialise key");
+    }
+    
+    success = client.GET();
+    printf("success: %d\n", success);
+                
+    while (success != HTTP_200_OK) 
+    {
+        PRINT_INFO("GET request failed");
+        check_internet();
+        success = client.GET();
+    }
+    
+    response = client.getString();
+    client.end();
+    
+    deserializeJson(doc, response);
+        
+    node_count = doc.size();
+    node_list = (char**)malloc(node_count * sizeof(char*));
+    
+    if (node_list == nullptr) 
+    {
+        DEBUG();
+        PRINT_ERROR("Memory allocation failed");
+        return;
+    }
+
+    // printf("Number of nodes: %zu\n", node_count);
+
+    // Parse each node in the response and extract node_id
+    for (int i = 0; i < node_count; i++) 
+    {
+        const char* node_id = doc[i]["node_id"];
+        (node_list)[i] = strdup(node_id);
+        
+        if ((node_list)[i] == nullptr) 
+        {
+            DEBUG();
+            PRINT_ERROR("String duplication failed");
+            // Free any allocated memory before returning
+            for (int j = 0; j < i; j++) 
+            {
+                free((node_list)[j]);
+            }
+
+            free(node_list);
+            return;
+        }
+    }
+}
+
+
+
 /**
  * @brief This function is the entry point for the HTTP send thread. It sends the data to the controller API.
  * @param parameter - The parameter passed to the task
@@ -184,24 +271,36 @@ String construct_json_payload(msg message)
     return json_payload;
   }
 
+
 /**
  * @brief This function initializes the HTTP client with the given URL and adds the necessary headers.
  * @param url - The URL to which the client will connect
  * @return int - EXIT_SUCCESS on success, EXIT_FAILURE on failure
  */
-int init_http_client(const String& url)
-{   
-    //TODO: check if url is NULL and handle it properly
-    if (strncmp(API_KEY, "", sizeof(API_KEY)) == 0)
+int init_http_client(const String& url, request_type type)
+{
+    if (!is_key_set())
     {
-        PRINT_STR("API key not initialized");
-        DEBUG();
-        return EXIT_FAILURE; //TODO: replace to hash define exit  failure
+        PRINT_ERROR("Key is not available in EEPROM");
+        return EXIT_FAILURE;
+
     }
-    
+
     client.begin(url);
-    client.addHeader("Content-Type", "application/json");
-    client.addHeader("access_token", API_KEY);
+    client.addHeader("access_token", config.api_key);
+    
+    switch (type)
+    {
+        case POST:
+            client.addHeader("Content-Type", "application/json");
+            break;
+        case GET:
+            client.addHeader("accept", "application/json");
+            break;
+    
+    default:
+        break;
+    }
 
     return EXIT_SUCCESS;
 }
@@ -219,7 +318,11 @@ int post_request(String json_payload)
 
     url = constr_endp(TX_POST_ENDPOINT); 
     
-    init_http_client(url);
+    if (init_http_client(url, POST) == EXIT_FAILURE)
+    {
+        return EXIT_FAILURE;
+    }
+    
     http_code = client.POST(json_payload);
     client.end();
 
