@@ -2,6 +2,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Update.h>
+#include "eeprom/eeprom.h"
 
 #include "config.h"
 #include "https_comms.h"
@@ -26,10 +27,76 @@ void http_send(void* param);
 String construct_json_payload(msg message);
 void check_internet();
 char* constr_endp(const char* endpoint);
+void update_key(const char* new_key);
+void activate_controller();
 
 /******************* Globals *****************/
 HTTPClient client;
-String node_id;
+
+/**
+ * @brief The following function takes a new key,
+ * and updates it as the new key in the EEPROM.
+ */
+void update_key(const char* new_key) 
+{
+    strncpy(config.api_key, new_key, sizeof(config.api_key) - 1);  // Avoid buffer overflow
+    config.api_key[sizeof(config.api_key) - 1] = '\0';  // Ensure null-termination
+    save_config();
+}
+
+
+/**
+ * @brief The following function calls the activate_controller endpoint, it then 
+ * returns an api_key. It provides a username and password in the body.
+ */
+void activate_controller()
+{   
+    char * url;
+    int http_code;
+    String json_payload;
+    String response;
+    JsonDocument doc;
+    JsonDocument response_doc;
+    const char* api_key;
+
+    doc["controller_id"] = ID;
+    doc["username"] = "admin";
+    doc["password"] = "admin";
+
+    serializeJson(doc, json_payload); //convert into a string
+
+    url = constr_endp(TX_ACT_ENDPOINT);
+
+    client.begin(url);
+    client.addHeader("Content-Type", "application/json");
+    http_code = client.POST(json_payload);
+
+    switch (http_code)
+    {
+        case HTTP_200_OK:
+            response = client.getString();
+            deserializeJson(response_doc, response);
+            api_key = response_doc["access_token"];
+
+            if (api_key != nullptr) 
+            {
+                update_key(api_key);
+            } 
+            else 
+            {
+                PRINT_ERROR("access_token not found in response");
+            }
+
+            break;
+
+        default:
+            printf("HTTP POST failed with status code: %d\n", http_code);
+            break;
+    }
+
+    client.end();
+}
+
 
 /******************* Function Definitions *****************/
 /**
@@ -39,21 +106,9 @@ String node_id;
  */
 void http_send(void* param)
 {
-    /**
-     * This portion of code doesnt make any sense
-     * But it still works??
-     * Calling the delete_th function removes it, but doesnt 
-     * show the removal in the threads cmd.
-     * Will find a work around.
-     */
-    // http_th = NULL;
-    // vTaskDelete(NULL);
-
     msg cur_msg;
     String json_payload;
     int success;
-    //check internet connection
-    // add_msg_to_queue();
 
     while(1) 
     {
@@ -65,28 +120,19 @@ void http_send(void* param)
                 cur_msg = internal_msg_q.front();
                 internal_msg_q.pop();
                 xSemaphoreGive(msg_queue_mh); // Release the mutex
-
-                // PRINT_STR("executing api post request");
-                // printf("\tsrc_node: %s    des_node: %s\n", cur_msg.src_node, cur_msg.des_node);
                 json_payload = construct_json_payload(cur_msg);
-
-                success = post_request(json_payload); // You'll need to modify your post_request function
+                success = post_request(json_payload);
                 
                 while (success != HTTP_201_CREATED) 
                 {
                     PRINT_INFO("POST request failed");
-                    // Check if the host is reachable
                     check_internet();
                     success = post_request(json_payload);
                 }
-
-                // PRINT_STR("POST request sent successfully");
-
             }
             else 
             {
                 xSemaphoreGive(msg_queue_mh); // Release the mutex
-                // Serial.println("Queue is empty, waiting...");
             }
 
             vTaskDelay(pdMS_TO_TICKS(3000));
@@ -115,7 +161,8 @@ String construct_json_payload(msg message)
     data = doc["data"].to<JsonArray>();
   
     // Helper function to add sensor data objects
-    auto add_sensor_data = [&data](const char* type, float value) {
+    auto add_sensor_data = [&data](const char* type, float value) 
+    {
         JsonObject obj = data.add<JsonObject>();
         obj["type"] = type;
         obj["level1"] = value;
@@ -136,7 +183,6 @@ String construct_json_payload(msg message)
     serializeJson(doc, json_payload);
     return json_payload;
   }
-
 
 /**
  * @brief This function initializes the HTTP client with the given URL and adds the necessary headers.

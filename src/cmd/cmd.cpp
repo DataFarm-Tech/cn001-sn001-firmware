@@ -11,6 +11,7 @@
 #include <mutex>
 #include <Arduino.h>
 #include "config.h"
+#include "eeprom/eeprom.h"
 #include "mh/mutex_h.h"
 
 /**
@@ -30,6 +31,7 @@ void cmd_help()
     cli_printf(" time - Shows the current NTP time\n");
     cli_printf(" teardown - Removes all threads and clears queue\n");
     cli_printf(" q_add - Adds an element to the queue\n");
+    cli_printf(" key - Shows the active http key used\n");
 }
 
 /**
@@ -235,4 +237,10 @@ void cmd_add_queue()
         xSemaphoreGive(msg_queue_mh);
     }
     
+}
+
+
+void cmd_key()
+{
+    cli_printf("Key: %s\n", config.api_key);
 }
