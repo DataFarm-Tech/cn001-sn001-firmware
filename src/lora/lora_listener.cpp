@@ -50,6 +50,7 @@ void lora_listener(void * param)
                     else
                     {
                         //packet not for me, relay and decrement by 1
+
                     }
                 }
                 
@@ -62,6 +63,11 @@ void lora_listener(void * param)
         //this thread will add to the Q
     }
 }
+
+// void relay_packet(uint8_t * buff)
+// {
+
+// }
 
 
 // void relay_packet(uint8_t * buff, )

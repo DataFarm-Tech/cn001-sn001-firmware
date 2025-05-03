@@ -84,7 +84,12 @@ void activate_controller()
     client.addHeader("accept", "application/json");
     http_code = client.POST(json_payload);
 
-    printf("code: %d\n", http_code);
+    while (http_code != HTTP_200_OK) 
+    {
+        PRINT_INFO("GET request failed");
+        check_internet();
+        http_code = client.POST(json_payload);
+    }
 
     switch (http_code)
     {
