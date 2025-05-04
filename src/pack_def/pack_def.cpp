@@ -35,6 +35,7 @@ void create_packet(uint8_t *packet_to_send, const packet *pkt, uint8_t seq_id)
     }
 
     calc_crc(packet_to_send, PACKET_LENGTH - CRC_SIZE);
+    printf("OK\n");
 }
 
 packet describe_packet(const uint8_t *buf, uint8_t buf_len)

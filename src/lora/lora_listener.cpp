@@ -63,6 +63,7 @@ void lora_listener(void * param)
 
 void send_packet(uint8_t* packet_to_send, uint8_t packet_len)
 {
+    printf("OK\n");
     if (xSemaphoreTake(rf95_mh, portMAX_DELAY) == pdTRUE)
     {
         if (!rf95.send(packet_to_send, packet_len)) 
@@ -72,5 +73,5 @@ void send_packet(uint8_t* packet_to_send, uint8_t packet_len)
 
         xSemaphoreGive(rf95_mh); // Release the mutex
     }
-    
+    printf("OK\n");
 }

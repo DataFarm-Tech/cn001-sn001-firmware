@@ -16,6 +16,7 @@
 #include "lora/lora_listener.h"
 #include "http/https_comms.h"
 #include "main_app/main_app.h"
+#include "pack_def/pack_def.h"
 
 /**
  * @brief A command to show the help text
@@ -40,6 +41,7 @@ void cmd_help()
     cli_printf(" cache - Lists items in cache.\n");
     cli_printf(" stop_thread [lora_listener_th, main_app_th, http_th] - stops a particular thread.\n");
     cli_printf(" start_thread [lora_listener_th, main_app_th, http_th] - stops a particular thread.\n");
+    cli_printf(" send_packet - sends a dummy packet.\n");
 }
 
 /**
@@ -352,4 +354,32 @@ void cmd_start_thread(const char * thread_name)
         printf("Unknown thread name: %s\n", thread_name);
         return;
     }
+}
+
+void cmd_send_packet()
+{
+    packet pkt;
+    uint8_t packet_to_send[PACKET_LENGTH];
+    uint8_t seq_id = 0;
+
+    // memset(packet_to_send, 0, sizeof(packet_to_send)); // Clear the packet buffer
+    // memset(&pkt, 0, sizeof(pkt)); // Clear the packet structure
+
+    printf("OK\n");
+    
+    strcpy(pkt.src_node, ID);
+    strcpy(pkt.des_node, "7jdsss");
+    pkt.ttl = ttl;
+    memset(pkt.data, 0, sizeof(pkt.data)); // Clear data field
+    printf("OK\n");
+    create_packet(packet_to_send, &pkt, seq_id);
+    
+    for (int i = 0; i < PACKET_LENGTH; i++)
+    {
+        printf("%02x ", packet_to_send[i]);
+    }
+    printf("\n");
+
+    send_packet(packet_to_send, sizeof(packet_to_send));
+    printf("packet sent\n");
 }
