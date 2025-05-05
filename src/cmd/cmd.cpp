@@ -211,7 +211,7 @@ void cmd_queue()
     
         for (size_t i = 0; i < size; ++i) 
         {
-            msg m = internal_msg_q.front();
+            message m = internal_msg_q.front();
             cli_printf("  [%d] src_node: %s, des_node: %s\n", index++, m.src_node.c_str(), m.des_node.c_str());
     
             internal_msg_q.pop();
@@ -227,7 +227,7 @@ void cmd_queue()
  */
 void cmd_add_queue()
 {
-    msg new_message;
+    message new_message;
     new_message.src_node = "tnode1";
     new_message.des_node = "controller";
     

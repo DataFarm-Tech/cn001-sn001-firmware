@@ -31,7 +31,7 @@ typedef enum
 } request_type;
 
 int post_request(String json_payload);
-String construct_json_payload(msg message);
+String construct_json_payload(message message);
 void check_internet();
 char* constr_endp(const char* endpoint);
 void update_key(const char* new_key);
@@ -134,6 +134,7 @@ void get_nodes_list()
     
     // Construct the endpoint URL with query parameter
     snprintf(url, sizeof(url), "%s?controller_id=%s", constr_endp(TX_GET_ENDPOINT), ID);
+    printf("url: %s\n", url);
 
     if (init_http_client(url, GET) == EXIT_FAILURE)
     {
@@ -141,11 +142,11 @@ void get_nodes_list()
     }
     
     success = client.GET();
-    printf("success: %d\n", success);
+    // printf("success: %d\n", success);
                 
     while (success != HTTP_200_OK) 
     {
-        PRINT_INFO("GET request failed");
+        // PRINT_INFO("GET request failed");
         check_internet();
         success = client.GET();
     }
@@ -199,7 +200,7 @@ void get_nodes_list()
  */
 void http_send(void* param)
 {
-    msg cur_msg;
+    message cur_msg;
     String json_payload;
     int success;
 
@@ -240,7 +241,7 @@ void http_send(void* param)
  * @param message - The data to be sent to the controller API
  * @return None
  */
-String construct_json_payload(msg message) 
+String construct_json_payload(message message) 
 {
     // Create a JSON document
     JsonDocument doc; // Adjust size as needed

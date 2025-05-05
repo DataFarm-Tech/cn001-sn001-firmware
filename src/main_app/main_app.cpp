@@ -78,6 +78,7 @@ void app()
             strcpy(pkt.src_node, ID);
             strcpy(pkt.des_node, node_list[i]);
             pkt.ttl = ttl;
+            pkt.num_nodes = node_count;
             memset(pkt.data, 0, sizeof(pkt.data)); // Clear data field
 
             
