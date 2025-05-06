@@ -12,6 +12,8 @@ RH_RF95 rf95(RFM95_NSS, RFM95_INT); // Create the rf95 obj
 
 
 void swap_src_dest_addresses(uint8_t buffer[]);
+
+
 /**
  * @brief The following thread listens for incoming
  * LoRa messages. It checks whether the packet is meant for itself.
@@ -21,7 +23,7 @@ void lora_listener(void * param)
 {
     while (1)
     {
-        if (xSemaphoreTake(rf95_mh, portMAX_DELAY) == pdTRUE) // Lock the mutex before accessing the rf95 mutex
+        if (xSemaphoreTake(rf95_mh, portMAX_DELAY) == pdTRUE)
         {
             if (rf95.available())
             {
@@ -30,11 +32,26 @@ void lora_listener(void * param)
 
                 if (rf95.recv(buf, &buf_len))
                 {
+                    /**
+                     * If the TTL is 0, 
+                     * it means that the packet should be dropped.
+                     */
                     if (buf[ADDRESS_SIZE * 2 + 1] == 0)
                     {
                         xSemaphoreGive(rf95_mh);
                         continue;
                     }
+
+                    if (hash_cache_contains(buf))
+                    {
+                        xSemaphoreGive(rf95_mh);
+                        continue;
+                    }
+                    else
+                    {
+                        hash_cache_add(buf);
+                    }
+                    
                     
                     if (memcmp(buf, ID, ADDRESS_SIZE) == MEMORY_CMP_SUCCESS)
                     {

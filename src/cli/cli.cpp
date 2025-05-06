@@ -25,7 +25,6 @@ cli_cmd get_best_enum(const char* token)
     if (strncmp(token, "queue", sizeof(token)) == 0) return CMD_QUEUE;
     if (strncmp(token, "ping", sizeof(token)) == 0) return CMD_PING;
     if (strncmp(token, "threads", sizeof(token)) == 0) return CMD_THREADS;
-    if (strncmp(token, "time", sizeof(token)) == 0) return CMD_TIME;
     if (strncmp(token, "teardown", sizeof(token)) == 0) return CMD_TEARDOWN;
     if (strncmp(token, "ipconfig", sizeof(token)) == 0) return CMD_IPCONFIG;
     if (strncmp(token, "q_add", sizeof(token)) == 0) return CMD_QADD;
@@ -42,16 +41,6 @@ cli_cmd get_best_enum(const char* token)
     return CMD_UNKNOWN;
 }
 
-void trim_newline(char* str) {
-    size_t len = strlen(str);
-    while (len > 0 && (str[len - 1] == '\r' || str[len - 1] == '\n')) {
-        str[--len] = '\0';
-    }
-}
-
-void print_prompt() {
-    cli_printf("%s> ", ID);
-}
 
 
 /**
@@ -95,9 +84,6 @@ void handle_cmd(char* cmd)
             break;
         case CMD_THREADS:
             cmd_threads();
-            break;
-        case CMD_TIME:
-            cmd_time();
             break;
         case CMD_TEARDOWN:
             cmd_teardown();
@@ -198,12 +184,4 @@ void read_serial_cli(void* param)
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
-}
-
-/**
- * @brief The following function prints the MOTD.
- */
-void print_motd() 
-{
-    cli_printf("Welcome to the DataFarm CLI!\n\n");
 }
