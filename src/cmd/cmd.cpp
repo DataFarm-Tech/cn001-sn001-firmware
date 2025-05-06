@@ -5,7 +5,6 @@
 #include "utils.h"
 #include <WiFi.h>
 #include <ESP32Ping.h>
-#include "ntp/ntp.h"
 #include "interrupts.h"
 #include <queue>
 #include <mutex>
@@ -65,23 +64,6 @@ void cmd_clear()
     }
 }
 
-
-/**
- * @brief A command to show the current sys time.
- * This time is the NTP time, being retrieved by the NTP client.
- */
-void cmd_time()
-{
-    uint32_t currentTime;
-
-    if (!get_sys_time(&currentTime))
-    {
-        return;
-    }
-
-    printf("time: %d\n", currentTime);
-    
-}
 /**
  * @brief The following cmd shows all the active threads
  */
@@ -255,12 +237,6 @@ void cmd_add_queue()
 void cmd_key()
 {
     cli_printf("Key: %s\n", config.api_key);
-}
-
-void cmd_clear_config()
-{
-    printf("Clearing config\n");
-    clear_config();
 }
 
 void cmd_node_list()
