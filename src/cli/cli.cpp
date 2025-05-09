@@ -58,9 +58,14 @@ void handle_cmd(char* cmd)
     cli_cmd cmd_input = get_best_enum(token);
     
     char* arg = strtok(nullptr, " ");
+    char* arg2 = strtok(nullptr, " ");
+
+    if (arg) trim_newline(arg);
+    if (arg2) trim_newline(arg2);
     
     cli_printf("\n");
-    if (arg) trim_newline(arg);
+
+ 
     
     switch (cmd_input) 
     {
@@ -92,7 +97,7 @@ void handle_cmd(char* cmd)
             cmd_ipconfig();
             break;
         case CMD_QADD:
-            cmd_add_queue();
+            cmd_add_queue(arg, arg2);
             break;
         case CMD_APPLY:
             save_config();

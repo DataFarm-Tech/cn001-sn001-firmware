@@ -35,7 +35,7 @@ void cmd_threads();
 void cmd_teardown();
 void cmd_ipconfig();
 void cmd_key();
-void cmd_add_queue();
+void cmd_add_queue(const char * src_node, const char * des_node);
 void cmd_node_list();
 void cmd_cache();
 void cmd_check_state();
