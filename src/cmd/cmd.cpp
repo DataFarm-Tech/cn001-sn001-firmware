@@ -235,12 +235,20 @@ void cmd_add_queue()
     
 }
 
-
+/**
+ * @brief This command shows the current API key
+ * @return None
+ */
 void cmd_key()
 {
     cli_printf("Key: %s\n", config.api_key);
 }
 
+/**
+ * @brief This command lists all the nodes
+ * in the node list.
+ * @return None
+ */
 void cmd_node_list()
 {
     cli_printf("Node IDs:\n");
@@ -251,6 +259,10 @@ void cmd_node_list()
     cli_printf("\n");
 }
 
+/**
+ * @brief This command prints the contents of the hash cache
+ * @return None
+ */
 void cmd_cache()
 {
     Serial.println("Hash Cache Contents:");
@@ -272,6 +284,11 @@ void cmd_cache()
     }
 }
 
+/**
+ * @brief This command stops a thread
+ * @param thread_name - The name of the thread to stop
+ * @return None
+ */
 void cmd_stop_thread(const char* thread_name)
 {
     if (thread_name == NULL) 
@@ -302,6 +319,10 @@ void cmd_stop_thread(const char* thread_name)
     }
 }
 
+/**
+ * @brief This command checks the current state of the device
+ * @return None
+ */
 void cmd_check_state()
 {
     switch (current_state)
@@ -321,7 +342,11 @@ void cmd_check_state()
     }
 }
 
-
+/**
+ * @brief This command starts a thread
+ * @param thread_name - The name of the thread to start
+ * @return None
+ */
 void cmd_start_thread(const char * thread_name)
 {
     if (thread_name == NULL) 
@@ -380,6 +405,12 @@ void cmd_send_packet()
     printf("packet sent\n");
 }
 
+/**
+ * @brief This command clears the current config
+ * and erases the credentials
+ * @param arg
+ * @return None
+ */
 void cmd_disconnect_wifi(const char * arg)
 {
     if (arg == NULL) 
