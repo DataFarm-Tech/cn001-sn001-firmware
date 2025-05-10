@@ -127,6 +127,8 @@ void switch_state(const int sensor_pin, const int controller_pin)
             
             if (!is_key_set()) /* Before proceeding key must exist, for http thread to use*/
             {
+                printf("key is not set\n");
+                DEBUG();
                 activate_controller(); /* Retrieves a key from the API*/
             }
             

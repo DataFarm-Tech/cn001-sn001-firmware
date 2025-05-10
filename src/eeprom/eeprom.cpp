@@ -50,4 +50,5 @@ void clear_config()
 
     // Also update the in-memory config if needed
     config = empty_config;
+    // config.api_key = '\0';
 }

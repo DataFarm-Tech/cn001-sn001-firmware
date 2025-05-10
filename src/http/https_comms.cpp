@@ -90,6 +90,7 @@ void activate_controller()
         {
             case HTTP_401_UNAUTH:
                 printf("[%d]: Unauthorized access. Key is invalid.\n", http_code);
+                printf("test\n");
                 break;
             default:
                 break;
@@ -107,8 +108,7 @@ void activate_controller()
 
     if (api_key != nullptr) 
     {
-        
-        (api_key);
+        update_key(api_key);
     } 
     else 
     {
