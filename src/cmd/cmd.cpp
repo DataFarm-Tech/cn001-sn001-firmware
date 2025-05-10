@@ -16,6 +16,7 @@
 #include "http/https_comms.h"
 #include "hw.h"
 #include "main_app/main_app.h"
+#include "pack_def/pack_def.h"
 
 /**
  * @brief A command to show the help text
@@ -276,12 +277,12 @@ void cmd_add_queue(const char * src_node, const char * des_node)
             break;
         case CONTROLLER_STATE:
 
-            if (src_node == NULL || strlen(src_node) != 6)
+            if (src_node == NULL || strlen(src_node) != ADDRESS_SIZE)
             {
                 src_node = "sn0001";
             }
 
-            if (des_node == NULL || strlen(des_node) != 6)
+            if (des_node == NULL || strlen(des_node) != ADDRESS_SIZE)
             {
                 des_node = "cn0001";
             }
@@ -506,17 +507,47 @@ void cmd_disconnect_wifi(const char * arg)
 {
     if (arg == NULL) 
     {
-        wifi_disconnect(false);
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            wifi_disconnect(false); /** if no arg, do not erase credentials */
+        }
+        else
+        {
+            printf("Not connected to WiFi.\n");
+        }
+        
         return;
     }
-    else if (strcmp(arg, "erase") == 0) 
+    else if (strncmp(arg, "erase", strlen(arg)) == 0) 
     {
-        wifi_disconnect(true);
-        printf("Disconnected from WiFi and erased credentials\n");
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            wifi_disconnect(true);
+        }
+        else
+        {
+            printf("Not connected to WiFi.\n");
+        }
+
+        return;
     } 
     else
     {
         printf("Invalid argument. Use 'erase' to erase credentials.\n");
         return;
     }
+}
+/**
+ * @brief This command connects to the WiFi
+ * @return None
+ */
+void cmd_connect_wifi()
+{
+    if (WiFi.status() == WL_CONNECTED) 
+    {
+        printf("Already connected to WiFi.\n");
+        return;
+    }
+
+    wifi_connect();
 }
