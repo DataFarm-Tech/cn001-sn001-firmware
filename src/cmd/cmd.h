@@ -23,6 +23,7 @@ typedef enum {
     CMD_SEND_PACKET,
     CMD_STATE,
     CMD_DISCONNECT_WIFI,
+    CMD_CONNECT_WIFI,
     CMD_UNKNOWN
 } cli_cmd;
 
@@ -36,7 +37,7 @@ void cmd_threads();
 void cmd_teardown();
 void cmd_ipconfig();
 void cmd_key();
-void cmd_add_queue();
+void cmd_add_queue(const char * src_node, const char * des_node);
 void cmd_node_list();
 void cmd_cache();
 void cmd_check_state();
@@ -44,3 +45,4 @@ void cmd_stop_thread(const char * thread_name);
 void cmd_start_thread(const char * thread_name);
 void cmd_send_packet();
 void cmd_disconnect_wifi(const char * arg);
+void cmd_connect_wifi();
