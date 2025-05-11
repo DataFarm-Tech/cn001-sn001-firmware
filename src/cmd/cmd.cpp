@@ -212,8 +212,6 @@ void cmd_teardown()
  */
 void cmd_queue() 
 {
-    int index = 0;
-    size_t size;
     message m;
     
     switch (current_state)
@@ -236,7 +234,8 @@ void cmd_queue()
                             return;
                         }
                         
-                        size = internal_msg_q.size();
+                        size_t size = internal_msg_q.size();
+                        int index = 0;
                     
                         for (size_t i = 0; i < size; ++i) 
                         {

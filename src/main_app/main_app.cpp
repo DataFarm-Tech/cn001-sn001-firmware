@@ -11,7 +11,7 @@
 
 void app();
 
-void main_app(void *parm)
+void main_app(void * param)
 {
     app();
 
@@ -32,10 +32,11 @@ void app()
     PRINT_INFO("Starting app...\n");
 
     cn001_req req_pkt;
-    uint8_t packet_to_send[CN001_REQ_LEN];
-
+    
     if (node_count > 0)
     {
+        uint8_t packet_to_send[CN001_REQ_LEN];
+
         for (int i = 0; i < node_count; i++)
         {
             memset(packet_to_send, 0, sizeof(packet_to_send)); // Clear the packet buffer

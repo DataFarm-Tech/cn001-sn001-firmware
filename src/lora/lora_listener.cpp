@@ -166,23 +166,6 @@ void lora_listener(void * param)
 
 
 /**
- * @brief Swaps the source and destination addresses in a given buffer.
- *        The function assumes that the first ADDRESS_SIZE bytes represent
- *        the source address, and the next ADDRESS_SIZE bytes represent 
- *        the destination address.
- * 
- * @param buffer Pointer to the buffer containing the addresses.
- */
-void swap_src_dest_addresses(uint8_t buffer[])
-{
-    uint8_t tmp[ADDRESS_SIZE];
-    memcpy(tmp, buffer, ADDRESS_SIZE);
-    memcpy(buffer, buffer + ADDRESS_SIZE, ADDRESS_SIZE);
-    memcpy(buffer + ADDRESS_SIZE, tmp, ADDRESS_SIZE);
-}
-
-
-/**
  * @brief Sends a packet using the RF95 module.
  * 
  * @param packet_to_send Pointer to the packet to be sent.

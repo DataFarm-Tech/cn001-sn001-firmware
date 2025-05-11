@@ -159,41 +159,6 @@ void pkt_sn001_err_rsp(uint8_t * buf, const sn001_err_rsp * pkt, uint8_t seq_id)
     calc_crc(buf, offset);
 }
 
-void create_packet(uint8_t *packet_to_send, const packet *pkt, uint8_t seq_id)
-{
-    byte sha256Hash[SHA256_SIZE];
-    String data_to_hash = String(pkt->src_node) + String(seq_id);
-    generate_hash(data_to_hash, sha256Hash);
-
-    int j;
-
-    for (j = 0; j < ADDRESS_SIZE; j++) 
-    {
-        packet_to_send[j] = pkt->des_node[j];
-    }
-
-    for (j = 0; j < ADDRESS_SIZE; j++) 
-    {
-        packet_to_send[ADDRESS_SIZE + j] = pkt->src_node[j];
-    }
-
-    packet_to_send[ADDRESS_SIZE * 2] = pkt->num_nodes;
-
-    packet_to_send[ADDRESS_SIZE * 2 + 1] = pkt->ttl;
-
-    for (j = 0; j < SHA256_SIZE; j++) 
-    {
-        packet_to_send[ADDRESS_SIZE * 2 + 1 + 1 + j] = sha256Hash[j];
-    }
-
-    for (j = 0; j < DATA_SIZE; j++) 
-    {
-        packet_to_send[ADDRESS_SIZE * 2 + 1 + 1 + SHA256_SIZE + j] = pkt->data[j];
-    }
-
-    calc_crc(packet_to_send, PACKET_LENGTH - CRC_SIZE);
-}
-
 message describe_packet(const uint8_t *buf, uint8_t buf_len)
 {
     message msg;

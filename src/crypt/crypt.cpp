@@ -8,7 +8,7 @@
 #define CRC16_POLYNOMIAL 0x11021      // Polynomial for CRC-16-CCITT-FALSE
 
 void calc_crc(uint8_t *buffer, size_t length);
-uint16_t calc_crc_16_ccitt_false(uint8_t *data, size_t length);
+uint16_t calc_crc_16_ccitt_false(const uint8_t *data, size_t length);
 
 /**
  * @brief Validates the CRC-16-CCITT-FALSE of the given buffer.
@@ -58,7 +58,7 @@ void calc_crc(uint8_t *buffer, size_t length)
  * @param length - The length of the data
  * @return uint16_t - The calculated CRC-16-CCITT-FALSE checksum
  */
-uint16_t calc_crc_16_ccitt_false(uint8_t *data, size_t length) 
+uint16_t calc_crc_16_ccitt_false(const uint8_t * data, size_t length) 
 {
     uint16_t crc = CRC16_CCITT_FALSE_INIT;  // Use the defined initial CRC value
     for (size_t i = 0; i < length; i++) 
