@@ -45,7 +45,7 @@ void init_p()
 
     create_th(process_state_change, "process_state_change", PROC_CS_TH_STACK_SIZE, &process_state_ch_th, 0);
 
-    // switch_state(1, 0); //force a check on the switch state
+    switch_state(1, 0); //force a check on the switch state
     
     timer = timerBegin(0, TIMER_PRESCALER, true);
     
