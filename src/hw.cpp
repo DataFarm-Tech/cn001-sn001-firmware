@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <RH_RF95.h>
 #include <SPI.h>
+
 #include <WiFi.h>
 
 #include "config.h"
@@ -18,6 +19,7 @@
  */
 void rfm95w_setup()
 {
+    SPI.begin(RFM95_SCK, RFM95_MISO, RFM95_MOSI);
   digitalWrite(RFM95_RST, LOW);
   delay(10);
   digitalWrite(RFM95_RST, HIGH);
@@ -25,25 +27,27 @@ void rfm95w_setup()
 
   if (xSemaphoreTake(rf95_mh, portMAX_DELAY) == pdTRUE)
   {
-      while (!rf95.init())
-      {
-          PRINT_ERROR("rfm95w module init failed...");
-          err_led_state(LORA, INT_STATE_OK);
-          sleep(5); //output red LED
-      }
-
       if (!rf95.setFrequency(RF95_FREQ))
       {
           PRINT_ERROR("unable to set frequency for rfm95w module...");
           err_led_state(LORA, INT_STATE_OK);
           sleep(5); //output red LED
       }
-
+      
+      
+      
       rf95.setTxPower(23, false);
       rf95.setModemConfig(RH_RF95::Bw125Cr48Sf4096);
       
-      err_led_state(LORA, INT_STATE_OK);
-
+      
+      while (!rf95.init())
+      {
+          PRINT_ERROR("rfm95w module init failed...");
+          err_led_state(LORA, INT_STATE_OK);
+          sleep(5); //output red LED
+        }
+        err_led_state(LORA, INT_STATE_OK);
+        printf("lora successfully init\n");
       xSemaphoreGive(rf95_mh); // release the lock when done
   }
 
