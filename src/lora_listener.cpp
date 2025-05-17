@@ -30,10 +30,12 @@ void lora_listener(void * param)
             {
                 uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
                 uint8_t buf_len = sizeof(buf);
+                uint8_t hash_location = 15;
+                uint8_t ttl_location = hash_location - 1;
 
                 if (rf95.recv(buf, &buf_len))
                 {
-                    if (buf_len < SN001_ERR_RSP_LEN) /** This is the smallest msg len */
+                    if (buf_len < SN001_ERR_RSP_LEN || buf_len > SN001_SUC_RSP_LEN) /** This is the smallest msg len */
                     {
                         xSemaphoreGive(rf95_mh);
                         continue;
@@ -51,11 +53,21 @@ void lora_listener(void * param)
                         continue;
                     }
                     
+                    /** 
+                     * Since packets have different lengths. The ttl offset and hash offset
+                     * can change. If the msg_id is success then set of hash_location and our ttol_location.
+                     */
+                    if (buf[0] == SN001_SUC_RSP_ID)
+                    {
+                        hash_location = 21;
+                        ttl_location = hash_location - 1;
+                    }
+                    
                     /**
                      * If the TTL is 0, 
                      * it means that the packet should be dropped.
                      */
-                    if (buf[ADDRESS_SIZE * 2 + 1] == 0)
+                    if (buf[ttl_location] == 0)
                     {
                         xSemaphoreGive(rf95_mh);
                         continue;
@@ -70,14 +82,14 @@ void lora_listener(void * param)
                      * and we dont want to process the same packet multiple times.
                      */
 
-                    if (hash_cache_contains(buf))
+                    if (hash_cache_contains(buf, hash_location))
                     {
                         xSemaphoreGive(rf95_mh);
                         continue;
                     }
                     else
                     {
-                        hash_cache_add(buf);
+                        hash_cache_add(buf, hash_location);
                     }
                     
                     if (memcmp(buf, ID, ADDRESS_SIZE) == MEMORY_CMP_SUCCESS) /** Checks ownership of packet */
@@ -96,17 +108,17 @@ void lora_listener(void * param)
 
                                 switch (rc)
                                 {
-                                    case SN001_SUC_RSP_CODE:
+                                    case SN001_SUC_RSP_CODE: /** The rs485 has a connection and returned data */
                                     {
                                         /** Ensure green LED is set back to HIGH, when rs485 comms work. */
                                         err_led_state(SENSOR, INT_STATE_OK);
                                         sn001_rsp pkt_resp;
                                         uint8_t packet_success[SN001_SUC_RSP_LEN];
 
-                                        memcpy(pkt_resp.src_node, buf, ADDRESS_SIZE); /** Copy the des_node of buffer into the src_node of new packet */
-                                        memcpy(pkt_resp.des_node, buf + ADDRESS_SIZE, ADDRESS_SIZE); /** Copy the src_node of buffer into the des_node of new packet */
+                                        memcpy(pkt_resp.src_node, buf + 1, ADDRESS_SIZE); /** Copy the des_node of buffer into the src_node of new packet */
+                                        memcpy(pkt_resp.des_node, buf + ADDRESS_SIZE + 1, ADDRESS_SIZE); /** Copy the src_node of buffer into the des_node of new packet */
                                         memcpy(pkt_resp.data, rs485_buf, DATA_SIZE);
-                                        pkt_resp.ttl = buf[ADDRESS_SIZE * 2];
+                                        pkt_resp.ttl = buf[(ADDRESS_SIZE * 2) + 1];
 
                                         pkt_sn001_rsp(packet_success, &pkt_resp, seq_id);
                                         
@@ -128,9 +140,9 @@ void lora_listener(void * param)
                                         sn001_err_rsp pkt_err;
                                         uint8_t packet_err[SN001_ERR_RSP_LEN];
 
-                                        memcpy(pkt_err.src_node, buf, ADDRESS_SIZE);
-                                        memcpy(pkt_err.des_node, buf + ADDRESS_SIZE, ADDRESS_SIZE);
-                                        pkt_err.ttl = buf[ADDRESS_SIZE * 2];
+                                        memcpy(pkt_err.src_node, buf + 1, ADDRESS_SIZE);
+                                        memcpy(pkt_err.des_node, buf + ADDRESS_SIZE + 1, ADDRESS_SIZE);
+                                        pkt_err.ttl = buf[(ADDRESS_SIZE * 2) + 1];
                                         pkt_err.err_code = rc;
 
                                         pkt_sn001_err_rsp(packet_err, &pkt_err, seq_id);
@@ -164,7 +176,7 @@ void lora_listener(void * param)
                     }
                     else
                     {
-                        buf[ADDRESS_SIZE * 2 + 1] -= 1; // Decrement TTL
+                        buf[ttl_location] -= 1; // Decrement TTL
                         send_packet(buf, buf_len); // Send the packet
                     }
                 }

@@ -27,7 +27,11 @@ void init_p()
 {
     Serial.begin(BAUD_RATE);
     sleep(5); /* This is provided to ensure serial console has enough time to init*/
-    notify_console();
+    
+    #if DEBUG_EN != 1
+        notify_console();
+    #endif
+    
     printf("init_p: Starting initialization...\n");
 
     

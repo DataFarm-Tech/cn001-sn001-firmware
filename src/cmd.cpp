@@ -523,14 +523,7 @@ void cmd_send_packet()
     }
     printf("\n");
 
-    if (send_packet(packet_to_send, sizeof(packet_to_send)) == EXIT_SUCCESS)
-    {
-        if (xSemaphoreTake(seq_mh, portMAX_DELAY) == pdTRUE)
-        {
-            seq_id++;
-            xSemaphoreGive(seq_mh);
-        }
-    }
+    send_packet(packet_to_send, sizeof(packet_to_send));
 }
 
 /**

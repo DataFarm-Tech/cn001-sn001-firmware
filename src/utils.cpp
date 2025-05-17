@@ -27,4 +27,19 @@ void trim_newline(char * str)
     }
 }
 
+/**
+ * @brief The following function validates whether the API key
+ * is of UUID type and is populated.
+ * @param uuid - The API key to validate
+ */
+int is_uuid_format(const char * uuid)
+{
+    if (uuid == NULL || strlen(uuid) != 36)
+    {
+        return EXIT_FAILURE;
+    }
 
+    return EXIT_SUCCESS; /** Added basic validation. */
+
+    /** Will add further checking. */
+}

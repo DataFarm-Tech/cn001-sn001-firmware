@@ -26,7 +26,7 @@
  * reasons, since there is no interupt pins on the 
  * devices with LoRa modules.
  */
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 
 #define ID "tcon12" //if ID is never defined in compilation process, it will be set to "UNDEFINED"
 #define BAUD_RATE 115200

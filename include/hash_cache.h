@@ -8,5 +8,5 @@
 
 
 void hash_cache_init();
-bool hash_cache_contains(const uint8_t *hash);
-void hash_cache_add(const uint8_t *hash);
+bool hash_cache_contains(const uint8_t *buff, uint8_t hash_location);
+void hash_cache_add(const uint8_t *buff, uint8_t hash_location);

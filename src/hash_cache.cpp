@@ -33,14 +33,19 @@ void hash_cache_init() {
  * @param hash - The full packet (hash is inside)
  * @return true if the hash is in the cache, false otherwise
  */
-bool hash_cache_contains(const uint8_t *hash) {
+bool hash_cache_contains(const uint8_t *buff, uint8_t hash_location) {
     uint8_t hash_cache_entry[HASH_SIZE];
-    memcpy(hash_cache_entry, hash + 14, HASH_SIZE);
+    /**
+     * Extract 32 bytes from hash_location into hash_cache_entry
+     */
+    memcpy(hash_cache_entry, buff + hash_location, HASH_SIZE);
 
     
-    for (int i = 0; i < config.cache.count; i++) {
+    for (int i = 0; i < config.cache.count; i++) 
+    {
         uint8_t index = (config.cache.head + i) % hash_cache_size;
-        if (hashes_equal(hash_cache_entry, config.cache.entries[index])) {
+        if (hashes_equal(hash_cache_entry, config.cache.entries[index])) 
+        {
             return true;
         }
     }
@@ -53,18 +58,26 @@ bool hash_cache_contains(const uint8_t *hash) {
  * @param hash - The hash to be added to the cache
  * @return None
  */
-void hash_cache_add(const uint8_t *hash) {
+void hash_cache_add(const uint8_t *buff, uint8_t hash_location) {
+    
     uint8_t hash_cache_entry[HASH_SIZE];
-    memcpy(hash_cache_entry, hash + 14, HASH_SIZE);
+    /**
+     * Extract 32 bytes from hash_location into hash_cache_entry
+     */
+    memcpy(hash_cache_entry, buff + hash_location, HASH_SIZE);
 
     uint8_t index;
-    if (config.cache.count < hash_cache_size) {
+    if (config.cache.count < hash_cache_size) 
+    {
         index = (config.cache.head + config.cache.count) % hash_cache_size;
         config.cache.count++;
-    } else {
+    } 
+    else 
+    {
         index = config.cache.head;
         config.cache.head = (config.cache.head + 1) % hash_cache_size;
     }
+    
     memcpy(config.cache.entries[index], hash_cache_entry, HASH_SIZE);
     save_config();
 }

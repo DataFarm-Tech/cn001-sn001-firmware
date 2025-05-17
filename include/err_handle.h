@@ -15,7 +15,8 @@ typedef enum
 {
     LORA,
     WIFI,
-    SENSOR
+    SENSOR,
+    FAULT
 } pof_e; /** Point of Failure */
 
 

@@ -38,7 +38,7 @@ void pkt_cn001_req(uint8_t * buf, const cn001_req * pkt, uint8_t seq_id)
     int j;
     int offset = 0;
 
-    buf[offset++] = CN001_REQ_ID; /** Copy MSG_ID into buf */
+    buf[offset] = CN001_REQ_ID; /** Copy MSG_ID into buf */
 
     for (j = 0; j < ADDRESS_SIZE; j++) 
     {
@@ -83,7 +83,7 @@ void pkt_sn001_rsp(uint8_t * buf, const sn001_rsp * pkt, uint8_t seq_id)
     int j;
     int offset = 0;
 
-    buf[offset++] = SN001_SUC_RSP_ID;
+    buf[offset] = SN001_SUC_RSP_ID;
 
     for (j = 0; j < ADDRESS_SIZE; j++) 
     {
@@ -106,6 +106,8 @@ void pkt_sn001_rsp(uint8_t * buf, const sn001_rsp * pkt, uint8_t seq_id)
     {
         buf[offset++] = sha256Hash[j];
     }
+
+    buf[offset++] = pkt->battery_lev;
 
     if (offset != SN001_SUC_RSP_LEN - CRC_SIZE) 
     {
@@ -131,7 +133,7 @@ void pkt_sn001_err_rsp(uint8_t * buf, const sn001_err_rsp * pkt, uint8_t seq_id)
     int j;
     int offset = 0;
 
-    buf[offset++] = SN001_ERR_RSP_ID;
+    buf[offset] = SN001_ERR_RSP_ID;
 
     for (j = 0; j < ADDRESS_SIZE; j++) 
     {
@@ -150,6 +152,8 @@ void pkt_sn001_err_rsp(uint8_t * buf, const sn001_err_rsp * pkt, uint8_t seq_id)
     {
         buf[offset++] = sha256Hash[j];
     }
+
+    buf[offset++] = pkt->battery_lev;
 
     if (offset != SN001_ERR_RSP_LEN - CRC_SIZE) 
     {
@@ -173,30 +177,35 @@ void cn001_handle_packet(const uint8_t *buf, uint8_t buf_len)
     String des_node;
     String src_node;
 
-    for (int i = 0; i < ADDRESS_SIZE; i++) 
-    {
-        des_node[i] = (char)buf[i];
-    }
+    uint8_t msg_id = buf[0];
+    int i;
 
-    for (int i = 0; i < ADDRESS_SIZE; i++)
+    /** Extract destination node from packet */
+    for (i = 0; i < ADDRESS_SIZE; i++) 
     {
-        src_node[i] = (char)buf[ADDRESS_SIZE + i];
+        des_node[i] = (char)buf[i + 1];
     }
     
-    des_node[ADDRESS_SIZE] = '\0';
-    src_node[ADDRESS_SIZE] = '\0';
+    /** Extract source node from packet */
+    for (i = 0; i < ADDRESS_SIZE; i++)
+    {
+        src_node[i] = (char)buf[1 + ADDRESS_SIZE + i];
+    }
     
-    switch (buf[0])
+    des_node[ADDRESS_SIZE + 1] = '\0'; /** May need to do this not sure */
+    src_node[ADDRESS_SIZE + 1] = '\0';
+    
+    switch (msg_id)
     {
         case SN001_SUC_RSP_ID:
         {
             sn001_suc_rsp suc_rsp;
-            int index = 0;
+            int index = 1; /** index is 1, since msg_id holds 1st byte. */
             
             suc_rsp.src_node = src_node;
             suc_rsp.des_node = des_node;
 
-            suc_rsp.data.rs485_humidity = buf[ADDRESS_SIZE * 2];
+            suc_rsp.data.rs485_humidity = buf[ADDRESS_SIZE * 2 + index];
             suc_rsp.data.rs485_temp = buf[ADDRESS_SIZE * 2 + ++index];
             suc_rsp.data.rs485_con = buf[ADDRESS_SIZE * 2 + ++index];
             suc_rsp.data.rs485_ph = buf[ADDRESS_SIZE * 2 + ++index];
@@ -219,7 +228,8 @@ void cn001_handle_packet(const uint8_t *buf, uint8_t buf_len)
              * since this is an error about another 
              * node.
              */
-            cn001_notify_error(src_node, buf[14]);
+            // notify_battery_health(src_node, buf[SN001_ERR_RSP_LEN - 2]); /** Getting the battery level from packet */
+            cn001_notify_error(src_node, buf[13]);
             break;
         }
     default:
@@ -253,4 +263,22 @@ void cn001_notify_error(String src_node, uint8_t rc)
     }
 
     
+}
+
+/**
+ * @brief The following function takes a src_node and it's
+ * battery health. Before notifying API, battery_health must be less than
+ * 25%. 
+ * @param src_node
+ * @param battery_health
+ * @return void
+ */
+void notify_battery_health(String src_node, uint8_t battery_health)
+{
+    if (battery_health < 25)
+    {
+        return;
+    }
+
+    /** Call to API  */
 }

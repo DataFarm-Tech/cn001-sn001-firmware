@@ -8,8 +8,8 @@
 #define PACKET_LENGTH 55
 
 #define CN001_REQ_LEN 49
-#define SN001_SUC_RSP_LEN 55
-#define SN001_ERR_RSP_LEN 49
+#define SN001_SUC_RSP_LEN 56
+#define SN001_ERR_RSP_LEN 50
 
 #define CN001_REQ_ID 0x01
 #define SN001_SUC_RSP_ID 0x02
@@ -52,6 +52,7 @@ typedef struct {
     char src_node[ADDRESS_SIZE + 1];
     char data[DATA_SIZE];
     uint8_t ttl;
+    uint8_t battery_lev;
 } sn001_rsp;
 
 /**
@@ -66,6 +67,7 @@ typedef struct {
     uint8_t ttl;
     uint8_t hash[SHA256_SIZE];
     uint8_t err_code;
+    uint8_t battery_lev;
 } sn001_err_rsp;
 
 void pkt_cn001_req(uint8_t * buf, const cn001_req * pkt, uint8_t seq_id);

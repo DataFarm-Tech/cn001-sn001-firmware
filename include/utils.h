@@ -21,6 +21,9 @@
  * else the print statements will be hidden. Note: notify_console is set
  * to ensure that we know if no console is showing it means the debug has been turned off.
  */
+
+ #define notify_console() Serial.println("Console IS OFF...")
+
 #if DEBUG_MODE == 1
 
     #define cli_printf Serial.printf
@@ -41,7 +44,6 @@
     #define PRINT_ERROR(to_print) printf("[ERROR]: %s\n", to_print)
 
 #else
-    #define notify_console() Serial.println("Console IS OFF...")
     #define cli_printf(...)
     #define cli_print(...)
     #define printf(...)
@@ -58,3 +60,4 @@
 void print_prompt();
 void print_motd();
 void trim_newline(char * str);
+int is_uuid_format(const char * uuid);

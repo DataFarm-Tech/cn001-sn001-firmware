@@ -37,7 +37,7 @@ void init_mutex(device_state_t state)
             
             break;
         case SENSOR_STATE:
-            //TODO
+            
             break;
         
         default:

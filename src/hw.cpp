@@ -131,5 +131,30 @@ void wifi_disconnect(bool erase_creds)
     }
 
     err_led_state(WIFI, INT_STATE_ERROR);
-    
+}
+
+
+/**
+ * @brief The following function opens the rs485 comms between the esp32 and the 
+ * sensor.
+ */
+void open_rs485_comms()
+{
+    digitalWrite(RS485_RTS, HIGH);
+    delay(1000);
+
+    while (Serial2.available())
+    {
+        Serial2.read();
+    }
+}
+
+/**
+ * @brief The following function closes the rs485 comms between the esp32 and the 
+ * sensor.
+ */
+void close_rs485_comms()
+{
+    digitalWrite(RS485_RTS, LOW); // close comms
+    delay(1000);
 }

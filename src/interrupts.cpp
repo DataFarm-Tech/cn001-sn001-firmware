@@ -78,11 +78,6 @@ void process_state_change(void *param)
     vTaskDelete(NULL); // Delete the task when done
 }
 
-/** TODO: double check this. */
-bool is_key_set() {
-    return config.api_key[0] != '\0';  // Check if the first character is not the null terminator
-}
-
 /**
  * @brief Switch the state of the system based on pin readings
  * @param sensor_pin - The state of the sensor pin
@@ -118,7 +113,7 @@ void switch_state(const int sensor_pin, const int controller_pin)
             
             wifi_connect(); /* Once controller starts it connects to wlan0*/
             
-            if (!is_key_set()) /* FIX THIS!!!*/
+            if (is_uuid_format(config.api_key) == EXIT_FAILURE)
             {
                 DEBUG();
                 activate_controller(); /* Retrieves a key from the API*/

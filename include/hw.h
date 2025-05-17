@@ -35,3 +35,5 @@ void rfm95w_setup();
 void init_hw_clock();
 void wifi_connect();
 void wifi_disconnect(bool erase_creds);
+void open_rs485_comms();
+void close_rs485_comms();
