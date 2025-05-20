@@ -158,3 +158,14 @@ void close_rs485_comms()
     digitalWrite(RS485_RTS, LOW); // close comms
     delay(1000);
 }
+
+/**
+ * @brief This function init the BMS pins. To ensure
+ * we can read the state of these pins.
+ */
+void init_bms_pins()
+{
+    pinMode(BMS_LED_PIN_1, INPUT);
+    pinMode(BMS_LED_PIN_2, INPUT);
+    pinMode(BMS_LED_PIN_3, INPUT);
+}

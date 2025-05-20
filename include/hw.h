@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h>
 /*
 * RS485 module pin definitions
 */
