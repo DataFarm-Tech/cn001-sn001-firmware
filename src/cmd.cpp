@@ -71,6 +71,7 @@ void cmd_help()
             printf("  apply - Saves the current config.\n");
             printf("  notify - Calls cn001_notify function to send notification.\n");
             printf("  battery - Reads the current battery state\n");
+            printf("  connect_wifi - Connects to the wifi.\n");
             break;
         
         default:

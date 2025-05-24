@@ -10,6 +10,7 @@
 #include "rs485_interface.h"
 #include "crypt.h"
 #include "msg_queue.h"
+#include "bms.h"
 
 
 RH_RF95 rf95(RFM95_NSS, RFM95_INT); // Create the rf95 obj
@@ -145,6 +146,8 @@ void lora_listener(void * param)
                                         memcpy(pkt_resp.des_node, buf + ADDRESS_SIZE + 1, ADDRESS_SIZE); /** Copy the src_node of buffer into the des_node of new packet */
                                         memcpy(pkt_resp.data, rs485_buf, DATA_SIZE);
                                         pkt_resp.ttl = buf[(ADDRESS_SIZE * 2) + 1];
+                                        set_battery_state();
+                                        pkt_resp.battery_lev = battery_state;
 
                                         pkt_sn001_rsp(packet_success, &pkt_resp, seq_id);
                                         
@@ -174,6 +177,9 @@ void lora_listener(void * param)
                                         memcpy(pkt_err.des_node, buf + ADDRESS_SIZE + 1, ADDRESS_SIZE);
                                         pkt_err.ttl = buf[(ADDRESS_SIZE * 2) + 1];
                                         pkt_err.err_code = rc;
+
+                                        set_battery_state();
+                                        pkt_err.battery_lev = battery_state;
 
                                         pkt_sn001_err_rsp(packet_err, &pkt_err, seq_id);
                                         

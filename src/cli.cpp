@@ -20,6 +20,7 @@ uint8_t cli_pos = 0;
  */
 cli_cmd get_best_enum(const char* token) 
 {
+    if (strncmp(token, "?", strlen(token)) == 0) return CMD_HELP;
     if (strncmp(token, "help", strlen(token)) == 0) return CMD_HELP;
     if (strncmp(token, "exit", strlen(token)) == 0) return CMD_EXIT;
     if (strncmp(token, "reboot", strlen(token)) == 0) return CMD_REBOOT;
