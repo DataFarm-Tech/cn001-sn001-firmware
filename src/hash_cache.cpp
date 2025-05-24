@@ -10,7 +10,7 @@
  * @return true if the hashes are equal, false otherwise
  */
 static bool hashes_equal(const uint8_t *a, const uint8_t *b) {
-    for (int i = 0; i < HASH_SIZE; i++) {
+    for (size_t i = 0; i < HASH_SIZE; i++) {
         if (a[i] != b[i]) return false;
     }
     return true;
@@ -41,7 +41,7 @@ bool hash_cache_contains(const uint8_t *buff, uint8_t hash_location) {
     memcpy(hash_cache_entry, buff + hash_location, HASH_SIZE);
 
     
-    for (int i = 0; i < config.cache.count; i++) 
+    for (size_t i = 0; i < config.cache.count; i++) 
     {
         uint8_t index = (config.cache.head + i) % hash_cache_size;
         if (hashes_equal(hash_cache_entry, config.cache.entries[index])) 

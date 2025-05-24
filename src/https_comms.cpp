@@ -31,14 +31,14 @@ typedef enum
 {
     POST,
     GET
-} request_type;
+} request_type_e;
 
 int post_request(String json_payload);
 String construct_json_payload(sn001_suc_rsp message);
 void check_internet();
 char* constr_endp(const char* endpoint);
 void update_key(const char* new_key);
-int init_http_client(const String& url, request_type type);
+int init_http_client(const String& url, request_type_e type);
 
 /******************* Globals *****************/
 HTTPClient client;
@@ -91,7 +91,6 @@ void activate_controller()
         {
             case HTTP_401_UNAUTH:
                 printf("[%d]: Unauthorized access. Key is invalid.\n", http_code);
-                printf("test\n");
                 break;
             default:
                 break;
@@ -129,44 +128,43 @@ void activate_controller()
  */
 void cn001_notify_message(String src_node, uint8_t code)
 {
-    char url[BUFFER_SIZE];
-    int success;
+    int http_code;
+    char * url;
+    size_t url_len;
+    size_t space_left;
     String json_payload;
     JsonDocument doc;
+
+    url = constr_endp(TX_POST_ENDPOINT_NOTIFY); 
+
+    if (init_http_client(url, POST) == EXIT_FAILURE)
+    {
+        PRINT_ERROR("Unable to initialise key");
+    }
 
     doc["device_id"] = src_node;
     char hexCodeStr[6]; // "0x" + 2 hex digits + null
     snprintf(hexCodeStr, sizeof(hexCodeStr), "0x%02X", code);
     doc["code"] = hexCodeStr;
+    serializeJson(doc, json_payload);
 
-    serializeJson(doc, json_payload);
-    serializeJson(doc, json_payload);
-    
     if (json_payload.length() == 0) 
     {
         PRINT_ERROR("Failed to serialize JSON");
         return;
     }
 
+    http_code = client.POST(json_payload);
 
-    snprintf(url, sizeof(url), constr_endp(TX_POST_ENDPOINT_NOTIFY));
-    
-    if (init_http_client(url, POST) == EXIT_FAILURE)
+    while (http_code != HTTP_201_CREATED)
     {
-        PRINT_ERROR("Unable to initialise key");
-    }
-
-    success = client.POST(json_payload);
-
-    while (success != HTTP_201_CREATED)
-    {
-        switch (success)
+        switch (http_code)
         {
             case HTTP_404_NOTFOUND:
-                printf("[%d]: %s is not a valid node\n", success, src_node);
+                printf("[%d]: %s is not a valid node\n", http_code, src_node);
                 break;
             case HTTP_422_UNPROCESSABLE_ENTITY:
-                printf("[%d]: %d is not a valid code\n", success, code);
+                printf("[%d]: %02x is not a valid code\n", http_code, code);
                 break;
             
         default:
@@ -174,12 +172,11 @@ void cn001_notify_message(String src_node, uint8_t code)
         }
 
         check_internet();
-        success = client.POST(json_payload);
+        http_code = client.POST(json_payload);
     }
-    
-
-    
 }
+
+
 /**
  * @brief The following function calls the /user/get/node endpoint to retrieve 
  *        the list of node IDs associated with the controller.
@@ -189,36 +186,46 @@ void cn001_notify_message(String src_node, uint8_t code)
  */
 void get_nodes_list() 
 {
-    char url[150];
     String response;
     JsonDocument doc;
-    int success;
-    
-    snprintf(url, sizeof(url), "%s?controller_id=%s", constr_endp(TX_GET_ENDPOINT), ID);
+    int http_code;
+    char * url;
+    size_t url_len;
+    size_t space_left;
+
+    url = constr_endp(TX_GET_ENDPOINT);
+    url_len = strlen(url);
+    space_left = BUFFER_SIZE - url_len - 1; // -1 for null terminator
+
+    if (space_left > 0) 
+    {
+        snprintf(url + url_len, space_left, "?controller_id=%s", ID);
+    } 
 
     if (init_http_client(url, GET) == EXIT_FAILURE)
     {
         PRINT_ERROR("Unable to initialise key");
     }
     
-    success = client.GET();
+    http_code = client.GET();
                 
-    while (success != HTTP_200_OK) 
+    while (http_code != HTTP_200_OK) 
     {
-        switch (success)
+        printf("get nodes list failed\n");
+        switch (http_code)
         {
             case HTTP_401_UNAUTH:
-                printf("[%d]: Unauthorized access. Key is invalid.\n", success);
+                printf("[%d]: Unauthorized access. Key is invalid.\n", http_code);
                 break;
             case HTTP_404_NOTFOUND:
-                printf("[%d]: %s is not a valid controller\n", success, ID);
+                printf("[%d]: %s is not a valid controller\n", http_code, ID);
                 break;
             default:
                 break;
         }
 
         check_internet();
-        success = client.GET();
+        http_code = client.GET();
     }
     
     response = client.getString();
@@ -226,13 +233,12 @@ void get_nodes_list()
     
     deserializeJson(doc, response);
 
-
     node_count = doc.size();
     node_list = (char**)malloc(node_count * sizeof(char*));
     
     if (node_list != nullptr) 
     {
-        for (int i = 0; i < node_count; i++) 
+        for (size_t i = 0; i < node_count; i++) 
         {
             const char* node_id = doc[i]["node_id"];
             (node_list)[i] = strdup(node_id);
@@ -242,7 +248,7 @@ void get_nodes_list()
                 DEBUG();
                 PRINT_ERROR("String duplication failed");
                 // Free any allocated memory before returning
-                for (int j = 0; j < i; j++) 
+                for (size_t j = 0; j < i; j++) 
                 {
                     free((node_list)[j]);
                 }
@@ -275,7 +281,7 @@ void http_send(void* param)
 {
     sn001_suc_rsp cur_msg;
     String json_payload;
-    int success;
+    int http_code;
 
     while(1) 
     {
@@ -288,17 +294,17 @@ void http_send(void* param)
                 internal_msg_q.pop();
                 xSemaphoreGive(msg_queue_mh); // Release the mutex
                 json_payload = construct_json_payload(cur_msg);
-                success = post_request(json_payload);
+                http_code = post_request(json_payload);
                 
-                while (success != HTTP_201_CREATED) 
+                while (http_code != HTTP_201_CREATED) 
                 {
-                    switch (success)
+                    switch (http_code)
                     {
                         case HTTP_401_UNAUTH:
-                            printf("[%d]: Unauthorized access. Key is invalid.\n", success);
+                            printf("[%d]: Unauthorized access. Key is invalid.\n", http_code);
                             break;
                         case HTTP_404_NOTFOUND:
-                            printf("[%d]: Node %s does not exist...\n", success, cur_msg.src_node.c_str());
+                            printf("[%d]: Node %s does not exist...\n", http_code, cur_msg.src_node.c_str());
                             break;
                         
                     default:
@@ -306,7 +312,7 @@ void http_send(void* param)
                     }
                     
                     check_internet();
-                    success = post_request(json_payload);
+                    http_code = post_request(json_payload);
                 }
             }
             else 
@@ -369,7 +375,7 @@ String construct_json_payload(sn001_suc_rsp message)
  * @param url - The URL to which the client will connect
  * @return int - EXIT_SUCCESS on success, EXIT_FAILURE on failure
  */
-int init_http_client(const String& url, request_type type)
+int init_http_client(const String& url, request_type_e type)
 {
     client.begin(url);
     client.addHeader("access_token", config.api_key);
@@ -398,10 +404,19 @@ int init_http_client(const String& url, request_type type)
  */
 int post_request(String json_payload)
 {
-    char * url;
     int http_code;
+    char * url;
+    size_t url_len;
+    size_t space_left;
 
-    url = constr_endp(TX_POST_ENDPOINT); 
+    url = constr_endp(TX_POST_ENDPOINT);
+    url_len = strlen(url);
+    space_left = BUFFER_SIZE - url_len - 1; // -1 for null terminator
+
+    if (space_left > 0) 
+    {
+        snprintf(url + url_len, space_left, "?controller_id=%s", ID);
+    } 
     
     if (init_http_client(url, POST) == EXIT_FAILURE)
     {
@@ -455,21 +470,15 @@ void check_internet()
 }
 
 /**
- * @brief Constructs the endpoint URL.
+ * @brief Constructs the endpoint URL with query parameters.
  * @param endpoint The endpoint to be appended to the URL.
- * @return char* - The constructed endpoint.
+ * @param param_name The query parameter name (or NULL if none).
+ * @param param_value The query parameter value (or NULL if none).
+ * @return char* - The constructed url (static buffer, don't free)
  */
-char* constr_endp(const char* endpoint)
+char* constr_endp(const char *endpoint)
 {
-    static char endp[BUFFER_SIZE];  // Static buffer to persist after function returns
-
-    if (strncmp(endpoint, "", strlen(endpoint)) == 0)
-    {
-        PRINT_STR("Endpoint is empty");
-        DEBUG();
-        return NULL;
-    }
-    
-    snprintf(endp, sizeof(endp), "http://%s:%s%s", API_HOST, API_PORT, endpoint);
-    return endp;
+    static char url[BUFFER_SIZE];
+    snprintf(url, sizeof(url), "http://%s:%s%s", API_HOST, API_PORT, endpoint);
+    return url;
 }

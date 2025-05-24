@@ -10,7 +10,7 @@
 #include "rs485_interface.h"
 #include "crypt.h"
 #include "msg_queue.h"
-#include "err_handle.h"
+
 
 RH_RF95 rf95(RFM95_NSS, RFM95_INT); // Create the rf95 obj
 
@@ -35,6 +35,15 @@ void lora_listener(void * param)
 
                 if (rf95.recv(buf, &buf_len))
                 {
+                    #if DEBUG_MODE == 1
+                        print("Packet Recieved: ");
+                        for (size_t i = 0; i < buf_len; i++)
+                        {
+                            printf("%02x ", buf[i]);
+                        }
+                        printf("\n");
+                    #endif
+                    
                     /**
                      * Check the length of the packet, ensure its within 
                      * bounds.
@@ -111,7 +120,7 @@ void lora_listener(void * param)
                             case SENSOR_STATE:
                             {
                                 char rs485_buf[DATA_SIZE];
-                                uint8_t rc = read_rs485(rs485_buf, DATA_SIZE);
+                                uint8_t rc = read_sensor(rs485_buf);
 
                                 switch (rc)
                                 {
@@ -205,6 +214,15 @@ void lora_listener(void * param)
  */
 int send_packet(uint8_t* packet_to_send, uint8_t packet_len)
 {
+    #if DEBUG_MODE == 1
+        print("Packet Sent: ");
+        for (size_t i = 0; i < packet_len; i++)
+        {
+            printf("%02x ", packet_to_send[i]);
+        }
+        printf("\n");
+    #endif
+
     if (xSemaphoreTake(rf95_mh, portMAX_DELAY) == pdTRUE)
     {
         if (!rf95.send(packet_to_send, packet_len))

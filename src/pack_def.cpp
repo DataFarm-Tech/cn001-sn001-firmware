@@ -25,8 +25,8 @@ void pkt_cn001_req(uint8_t * buf, const cn001_req * pkt, uint8_t seq_id)
     String data_to_hash = String(pkt->src_node) + String(seq_id);
     generate_hash(data_to_hash, sha256Hash);
 
-    int j;
-    int offset = 0;
+    size_t j;
+    size_t offset = 0;
 
     buf[offset] = CN001_REQ_ID; /** Copy MSG_ID into buf */
 
@@ -48,7 +48,7 @@ void pkt_cn001_req(uint8_t * buf, const cn001_req * pkt, uint8_t seq_id)
         buf[offset++] = sha256Hash[j];
     }
 
-    if (offset != CN001_REQ_LEN - CRC_SIZE)
+    if (offset != CN001_REQ_LEN - CRC_SIZE - 1) //indexing by 0.
     {
         printf("CN001_REQ packet length mismatch: expected %d, got %d\n", CN001_REQ_LEN, offset);
         return;
@@ -70,8 +70,8 @@ void pkt_sn001_rsp(uint8_t * buf, const sn001_rsp * pkt, uint8_t seq_id)
     String data_to_hash = String(pkt->src_node) + String(seq_id);
     generate_hash(data_to_hash, sha256Hash);
 
-    int j;
-    int offset = 0;
+    size_t j;
+    size_t offset = 0;
 
     buf[offset] = SN001_SUC_RSP_ID;
 
@@ -99,7 +99,7 @@ void pkt_sn001_rsp(uint8_t * buf, const sn001_rsp * pkt, uint8_t seq_id)
 
     buf[offset++] = pkt->battery_lev;
 
-    if (offset != SN001_SUC_RSP_LEN - CRC_SIZE) 
+    if (offset != SN001_SUC_RSP_LEN - CRC_SIZE - 1) //indexing by 0. 
     {
         printf("SN001_RSP packet length mismatch: expected %d, got %d\n", SN001_SUC_RSP_LEN, offset);
         return;
@@ -120,8 +120,8 @@ void pkt_sn001_err_rsp(uint8_t * buf, const sn001_err_rsp * pkt, uint8_t seq_id)
     String data_to_hash = String(pkt->src_node) + String(seq_id);
     generate_hash(data_to_hash, sha256Hash);
 
-    int j;
-    int offset = 0;
+    size_t j;
+    size_t offset = 0;
 
     buf[offset] = SN001_ERR_RSP_ID;
 
@@ -145,7 +145,7 @@ void pkt_sn001_err_rsp(uint8_t * buf, const sn001_err_rsp * pkt, uint8_t seq_id)
 
     buf[offset++] = pkt->battery_lev;
 
-    if (offset != SN001_ERR_RSP_LEN - CRC_SIZE) 
+    if (offset != SN001_ERR_RSP_LEN - CRC_SIZE - 1) //indexing from 0. 
     {
         printf("SN001_ERR_RSP packet length mismatch: expected %d, got %d\n", SN001_ERR_RSP_LEN, offset);
         return;
@@ -168,7 +168,7 @@ void cn001_handle_packet(const uint8_t *buf, uint8_t buf_len)
     String src_node;
 
     uint8_t msg_id = buf[0];
-    int i;
+    size_t i;
 
     /** Extract destination node from packet */
     for (i = 0; i < ADDRESS_SIZE; i++) 
@@ -190,7 +190,7 @@ void cn001_handle_packet(const uint8_t *buf, uint8_t buf_len)
         case SN001_SUC_RSP_ID:
         {
             sn001_suc_rsp suc_rsp;
-            int index = 1; /** index is 1, since msg_id holds 1st byte. */
+            size_t index = 1; /** index is 1, since msg_id holds 1st byte. */
             
             suc_rsp.src_node = src_node;
             suc_rsp.des_node = des_node;

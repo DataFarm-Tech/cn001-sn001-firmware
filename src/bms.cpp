@@ -13,9 +13,9 @@ volatile bat_charge_state_t battery_state = BAT_CHARGE_UNDEFINED;
  */
 void set_battery_state()
 {
-    int led1_on = digitalRead(BMS_LED_PIN_1) == LOW;
-    int led2_on = digitalRead(BMS_LED_PIN_2) == LOW;
-    int led3_on = digitalRead(BMS_LED_PIN_3) == LOW;
+    bool led1_on = digitalRead(BMS_LED_PIN_1) == LOW;
+    bool led2_on = digitalRead(BMS_LED_PIN_2) == LOW;
+    bool led3_on = digitalRead(BMS_LED_PIN_3) == LOW;
 
     if (!led1_on && !led2_on && !led3_on)
     {

@@ -24,6 +24,8 @@ typedef enum {
     CMD_STATE,
     CMD_DISCONNECT_WIFI,
     CMD_CONNECT_WIFI,
+    CMD_READ_SENSOR,
+    CMD_NOTIFY,
     CMD_UNKNOWN
 } cli_cmd;
 
@@ -46,3 +48,5 @@ void cmd_start_thread(const char * thread_name);
 void cmd_send_packet();
 void cmd_disconnect_wifi(const char * arg);
 void cmd_connect_wifi();
+void cmd_read_sensor();
+void cmd_notify_message(char * src_node, char * code_str);

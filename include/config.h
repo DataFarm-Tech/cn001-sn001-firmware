@@ -1,6 +1,12 @@
 #pragma once
 
 /** 
+ * Adding this macro to enable/disable the Wifi
+ * model's functionality. 
+ */
+#define WIFI_EN 1
+
+/** 
  * Adding this macro to disable the CLI when deploying
  * products. 
  */
@@ -14,19 +20,28 @@
 #define LORA_EN 1
 
 /**
- * Adding this macro to en/dis for development
- * reasons, since there is no interupt pins on the 
- * devices with LoRa modules.
+ * Adding this macro to disable/enable the interupt functionality
+ * If it is disabled, then it chooses the default state.
  */
-#define INT_STATE_EN 0
+#define INT_STATE_EN 1
+
+#if INT_STATE_EN == 0
+    #define CONTROLLER_DEF_STATE 1
+#endif 
 
 
 /**
- * Adding this macro to en/dis for development
- * reasons, since there is no interupt pins on the 
- * devices with LoRa modules.
+ * Adding this macro to silence all output
+ * including CLI and print statements.
  */
-#define DEBUG_MODE 1
+#define SILENCE_OUTPUT 1
+
+/**
+ * This macro is for testing and debugging reasons.
+ * If this is set to 1, then certain print statements
+ * will execute.
+ */
+#define DEBUG_MODE 0
 
 #define ID "tcon12" //if ID is never defined in compilation process, it will be set to "UNDEFINED"
 #define BAUD_RATE 115200

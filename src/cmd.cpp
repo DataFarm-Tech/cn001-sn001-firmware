@@ -16,7 +16,8 @@
 #include "hw.h"
 #include "main_app.h"
 #include "pack_def.h"
-#include "err_handle.h"
+#include "rs485_interface.h"
+
 
 /**
  * @brief A command to show the help text
@@ -42,6 +43,7 @@ void cmd_help()
             printf("  stop_thread [lora_listener_th, main_app_th, http_th] - stops a particular thread.\n");
             printf("  start_thread [lora_listener_th, main_app_th, http_th] - stops a particular thread.\n");
             printf("  apply - Saves the current config.\n");
+            printf("  read_sensor - Reads the sensor data, and prints buf to screen. \n");
             break;
         case CONTROLLER_STATE:
             printf("Available commands:\n");
@@ -65,6 +67,7 @@ void cmd_help()
             printf("  clear   - Clears the screen\n");
             printf("  state   - Shows the current state of the device\n");
             printf("  apply - Saves the current config.\n");
+            printf("  notify - Calls cn001_notify function to send notification.\n");
 
             break;
         
@@ -89,7 +92,7 @@ void cmd_exit()
  */
 void cmd_clear() 
 {
-    for (int i = 0; i < 50; i++) 
+    for (size_t i = 0; i < 50; i++) 
     {
         cli_print("\n");
     }
@@ -193,7 +196,46 @@ void cmd_ipconfig()
     }
 }
 
-
+/**
+ * @brief This command read's data from the rs485 interface.
+ */
+void cmd_read_sensor()
+{
+    switch (current_state)
+    {
+        case UNDEFINED_STATE:
+        case CONTROLLER_STATE:
+            printf("Cannot read from sensor in the current state.\n");
+            break;
+        case SENSOR_STATE:
+            char data[DATA_SIZE];
+            
+            switch (read_sensor(data))
+            {
+                case EXIT_SUCCESS:
+                    printf("Succesfully read sensor.\n");
+                    for (size_t i = 0; i < DATA_SIZE; i++)
+                    {
+                        printf("%02x ", data[i]);
+                    }
+                    printf("\n");
+                    
+                    break;
+                case SN001_ERR_RSP_CODE_A:
+                    printf("The following sensor reading has failed: RS485 connection severed\n");
+                    break;
+                case SN001_ERR_RSP_CODE_B:
+                    printf("The following sensor reading has failed: Data is outside upper and lower\n");
+                    
+            default:
+                break;
+            }
+            
+            break;
+    default:
+        break;
+    }
+}
 
 /**
  * @brief This command reboots the esp32
@@ -243,7 +285,7 @@ void cmd_queue()
                         }
                         
                         size_t size = internal_msg_q.size();
-                        int index = 0;
+                        size_t index = 0;
                     
                         for (size_t i = 0; i < size; ++i) 
                         {
@@ -368,7 +410,7 @@ void cmd_node_list()
             if (node_count > 0)
             {
                 cli_printf("Node IDs:\n");
-                for (int i = 0; i < node_count; i++) 
+                for (size_t i = 0; i < node_count; i++) 
                 {
                     cli_printf("%s ", (node_list)[i]);
                 }
@@ -393,14 +435,14 @@ void cmd_node_list()
 void cmd_cache()
 {
     Serial.println("Hash Cache Contents:");
-    for (int i = 0; i < config.cache.count; i++) {
+    for (size_t i = 0; i < config.cache.count; i++) {
         uint8_t index = (config.cache.head + i) % HASH_CACHE_SIZE;
         Serial.print("Entry ");
         Serial.print(i + 1);
         Serial.print(": ");
         
         // Print the hash as hexadecimal
-        for (int j = 0; j < HASH_SIZE; j++) {
+        for (size_t j = 0; j < HASH_SIZE; j++) {
             Serial.print(config.cache.entries[index][j], HEX);
             if (j < HASH_SIZE - 1) {
                 Serial.print(":");
@@ -517,7 +559,7 @@ void cmd_send_packet()
 
     pkt_cn001_req(packet_to_send, &req, seq_id);
 
-    for (int i = 0; i < CN001_REQ_LEN; i++)
+    for (size_t i = 0; i < CN001_REQ_LEN; i++)
     {
         printf("%02x ", packet_to_send[i]);
     }
@@ -579,4 +621,38 @@ void cmd_connect_wifi()
     }
 
     wifi_connect();
+}
+
+/**
+ * @brief The following command manually calls the cn001_notify_message.
+ * @param src_node
+ * @param code
+ * @return void
+ */
+void cmd_notify_message(char *src_node, char *code_str) {
+    uint8_t code;
+    char *endptr; // Used by strtol() to detect parsing errors
+
+    if (code_str != NULL && strlen(code_str) > 0) 
+    {
+        long parsed = strtol(code_str, &endptr, 0);
+        if (endptr == code_str || parsed < 0 || parsed > 255) 
+        {
+            // Failed to parse (invalid string or out of range)
+            parsed = 0x0A; // Default fallback
+        }
+        
+        code = (uint8_t)parsed;
+    } 
+    else 
+    {
+        code = 0x0A; // Default value if code_str is NULL or empty
+    }
+
+    if (src_node == NULL) 
+    {
+        src_node = "tnode1"; // Default node ID
+    }
+
+    cn001_notify_message(src_node, code);
 }

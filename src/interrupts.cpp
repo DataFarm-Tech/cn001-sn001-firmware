@@ -110,16 +110,18 @@ void switch_state(const int sensor_pin, const int controller_pin)
             tear_down(); /* Removes all threads, queues*/
             PRINT_INFO("Switching to controller state\n");
             current_state = CONTROLLER_STATE;
-            
-            wifi_connect(); /* Once controller starts it connects to wlan0*/
-            
-            if (is_uuid_format(config.api_key) == EXIT_FAILURE)
-            {
-                DEBUG();
-                activate_controller(); /* Retrieves a key from the API*/
-            }
-            
-            get_nodes_list(); /* Get's the node_list from the API and saves to global variable.*/
+
+            #if WIFI_EN == 1
+                wifi_connect(); /* Once controller starts it connects to wlan0*/
+                
+                if (is_uuid_format(config.api_key) == EXIT_FAILURE)
+                {
+                    DEBUG();
+                    activate_controller(); /* Retrieves a key from the API*/
+                }
+                
+                get_nodes_list(); /* Get's the node_list from the API and saves to global variable.*/
+            #endif
             
             init_mutex(current_state);
 

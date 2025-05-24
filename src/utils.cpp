@@ -20,7 +20,7 @@ void print_motd() {cli_printf("Welcome to the DataFarm CLI!\n\n");}
  */
 void trim_newline(char * str) 
 {
-    int len = strlen(str);
+    size_t len = strlen(str);
     while (len > 0 && (str[len - 1] == '\r' || str[len - 1] == '\n')) 
     {
         str[--len] = '\0';

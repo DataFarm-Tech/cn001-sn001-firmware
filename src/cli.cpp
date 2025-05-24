@@ -9,6 +9,7 @@
 #include "msg_queue.h"
 #include "cmd.h"
 #include "interrupts.h"
+#include "rs485_interface.h"
 
 char cli_buffer[BUFFER_SIZE];
 uint8_t cli_pos = 0;
@@ -40,6 +41,8 @@ cli_cmd get_best_enum(const char* token)
     if (strncmp(token, "disconnect_wifi", strlen(token)) == 0) return CMD_DISCONNECT_WIFI;
     if (strncmp(token, "send_packet", strlen(token)) == 0) return CMD_SEND_PACKET;
     if (strncmp(token, "connect_wifi", strlen(token)) == 0) return CMD_CONNECT_WIFI;
+    if (strncmp(token, "read_sensor", strlen(token)) == 0) return CMD_READ_SENSOR;
+    if (strncmp(token, "notify", strlen(token)) == 0) return CMD_NOTIFY;
     return CMD_UNKNOWN;
 }
 
@@ -133,6 +136,12 @@ void handle_cmd(char* cmd)
             break;
         case CMD_CONNECT_WIFI:
             cmd_connect_wifi();
+            break;
+        case CMD_READ_SENSOR:
+            cmd_read_sensor();
+            break;
+        case CMD_NOTIFY:
+            cmd_notify_message(arg, arg2);
             break;
         case CMD_UNKNOWN:
         default:

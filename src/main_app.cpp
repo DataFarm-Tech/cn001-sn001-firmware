@@ -79,7 +79,7 @@ void app()
     {
         uint8_t packet_to_send[CN001_REQ_LEN];
 
-        for (int i = 0; i < node_count; i++)
+        for (size_t i = 0; i < node_count; i++)
         {
             memset(packet_to_send, 0, sizeof(packet_to_send));
             memset(&req_pkt, 0, sizeof(req_pkt));
@@ -106,10 +106,8 @@ void app()
                 }
                 else
                 {
-                    printf("[INFO]: No Response from %s\n", req_pkt.des_node);
+                    printf("[INFO]: No Response from %s, sending notification\n", req_pkt.des_node);
                     cn001_notify_message(req_pkt.des_node, SN001_ERR_RSP_CODE_B);
-
-                    /** Notify user for error */
                 }
             }
         }

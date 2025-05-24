@@ -24,7 +24,7 @@
 
  #define notify_console() Serial.println("Console IS OFF...")
 
-#if DEBUG_MODE == 1
+#if SILENCE_OUTPUT == 1
 
     #define cli_printf Serial.printf
     #define cli_print Serial.print

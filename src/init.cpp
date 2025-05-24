@@ -8,7 +8,7 @@
 #include "th_handler.h"
 #include "eeprom.h"
 #include "utils.h"
-#include "err_handle.h"
+
 
 /*
 The current state must be undefined when initialising.
@@ -52,7 +52,14 @@ void init_p()
 
         create_th(process_state_change, "process_state_change", PROC_CS_TH_STACK_SIZE, &process_state_ch_th, 0);
     #else
-        switch_state(1, 0); //force a check on the switch state
+        #ifdef CONTROLLER_DEF_STATE
+            #if CONTROLLER_DEF_STATE == 1
+                switch_state(1, 0); //force a check on the switch state to become a controller
+            #else
+                switch_state(0,1); //force a check on the switch state to become a sensor
+            #endif
+        #endif
+        
     #endif
 
     //CLI Thread creation.
