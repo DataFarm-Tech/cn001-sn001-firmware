@@ -5,6 +5,7 @@
 SemaphoreHandle_t rf95_mh;  // Mutex handle
 SemaphoreHandle_t msg_queue_mh;  // Mutex handle
 SemaphoreHandle_t seq_mh;  // Mutex handle
+SemaphoreHandle_t http_mh; //Mutex handle
 
 void init_mutex(device_state_t state)
 {
@@ -23,7 +24,7 @@ void init_mutex(device_state_t state)
         PRINT_ERROR("Failed to create mutex for rf95");
         return;
     }
-    
+        
     switch (state)
     {
         case CONTROLLER_STATE:
@@ -33,6 +34,14 @@ void init_mutex(device_state_t state)
             {
                 DEBUG();
                 PRINT_ERROR("Failed to create mutex for msg queue");
+            }
+
+            http_mh = xSemaphoreCreateMutex();
+            if (http_mh == NULL)
+            {
+                DEBUG();
+                PRINT_ERROR("Failed to create mutex for http processes");
+                return;
             }
             
             break;

@@ -111,6 +111,8 @@ void switch_state(const int sensor_pin, const int controller_pin)
             PRINT_INFO("Switching to controller state\n");
             current_state = CONTROLLER_STATE;
 
+            init_mutex(current_state);
+
             #if WIFI_EN == 1
                 wifi_connect(); /* Once controller starts it connects to wlan0*/
                 
@@ -123,7 +125,6 @@ void switch_state(const int sensor_pin, const int controller_pin)
                 get_nodes_list(); /* Get's the node_list from the API and saves to global variable.*/
             #endif
             
-            init_mutex(current_state);
 
             init_hw_clock();
             
@@ -172,6 +173,13 @@ void tear_down()
         vSemaphoreDelete(seq_mh);
         seq_mh = NULL;
     }
+
+    if (http_mh != NULL)
+    {
+        vSemaphoreDelete(http_mh);
+        http_mh = NULL;
+    }
+    
     
     
 

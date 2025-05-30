@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "th_handler.h"
 #include "interrupts.h"
+#include "mutex_h.h"
 
 /******************* Hash Defines *****************/
 
@@ -83,7 +84,13 @@ void activate_controller()
     doc["password"] = "admin";
 
     serializeJson(doc, json_payload); //convert into a string
-    http_code = client.POST(json_payload);
+    
+    if (xSemaphoreTake(http_mh, portMAX_DELAY) == pdTRUE)
+    {
+        http_code = client.POST(json_payload);
+        xSemaphoreGive(http_mh);
+    }
+    
 
     while (http_code != HTTP_200_OK) 
     {
@@ -97,11 +104,20 @@ void activate_controller()
         }
 
         check_internet();
-        http_code = client.POST(json_payload);
+        
+        if (xSemaphoreTake(http_mh, portMAX_DELAY) == pdTRUE)
+        {
+            http_code = client.POST(json_payload);
+            xSemaphoreGive(http_mh);
+        }
     }
 
-    response = client.getString();
-    client.end();
+    if (xSemaphoreTake(http_mh, portMAX_DELAY) == pdTRUE)
+    {
+        response = client.getString();
+        client.end();
+        xSemaphoreGive(http_mh);
+    }
 
     deserializeJson(response_doc, response);
     api_key = response_doc["access_token"];
@@ -152,7 +168,11 @@ void cn001_notify_message(String src_node, uint8_t code)
         return;
     }
 
-    http_code = client.POST(json_payload);
+    if (xSemaphoreTake(http_mh, portMAX_DELAY) == pdTRUE)
+    {
+        http_code = client.POST(json_payload);
+        xSemaphoreGive(http_mh);
+    }
 
     while (http_code != HTTP_201_CREATED)
     {
@@ -170,7 +190,12 @@ void cn001_notify_message(String src_node, uint8_t code)
         }
 
         check_internet();
-        http_code = client.POST(json_payload);
+        
+        if (xSemaphoreTake(http_mh, portMAX_DELAY) == pdTRUE)
+        {
+            http_code = client.POST(json_payload);
+            xSemaphoreGive(http_mh);
+        }
     }
 }
 
@@ -205,7 +230,11 @@ void get_nodes_list()
         PRINT_ERROR("Unable to initialise key");
     }
     
-    http_code = client.GET();
+    if (xSemaphoreTake(http_mh, portMAX_DELAY) == pdTRUE)
+    {
+        http_code = client.GET();
+        xSemaphoreGive(http_mh);
+    }
                 
     while (http_code != HTTP_200_OK) 
     {
@@ -223,11 +252,20 @@ void get_nodes_list()
         }
 
         check_internet();
-        http_code = client.GET();
+
+        if (xSemaphoreTake(http_mh, portMAX_DELAY) == pdTRUE)
+        {
+            http_code = client.GET();
+            xSemaphoreGive(http_mh);
+        }
     }
     
-    response = client.getString();
-    client.end();
+    if (xSemaphoreTake(http_mh, portMAX_DELAY) == pdTRUE)
+    {
+        response = client.getString();
+        client.end();
+        xSemaphoreGive(http_mh);
+    }
     
     deserializeJson(doc, response);
 
@@ -420,9 +458,14 @@ int post_request(String json_payload)
     {
         return EXIT_FAILURE;
     }
+
+    if (xSemaphoreTake(http_mh, portMAX_DELAY) == pdTRUE)
+    {
+        http_code = client.POST(json_payload);
+        client.end();
+        xSemaphoreGive(http_mh);
+    }
     
-    http_code = client.POST(json_payload);
-    client.end();
 
     return http_code;
 }
