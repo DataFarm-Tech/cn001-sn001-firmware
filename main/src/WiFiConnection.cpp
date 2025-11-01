@@ -1,4 +1,4 @@
-#include "WiFiConnection.hpp"
+#include "comm/WiFiConnection.hpp"
 #include "esp_wifi.h"
 #include "esp_log.h"
 #include "freertos/event_groups.h"

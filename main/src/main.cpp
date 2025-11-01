@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Communication.hpp"
+#include "comm/Communication.hpp"
 #include "esp_log.h"
 extern "C" {
 #include "freertos/FreeRTOS.h"
@@ -15,7 +15,7 @@ extern "C" {
 #include "lwip/sockets.h"
 #include "lwip/inet.h"
 #include <string.h>
-#include "BatteryPacket.hpp"
+#include "packet/BatteryPacket.hpp"
 #include "Config.hpp"
 
 constexpr int sleep_time_sec = 6 * 60 * 60;

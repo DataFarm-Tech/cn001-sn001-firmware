@@ -6,7 +6,7 @@
 #include "esp_log.h"
 #include <cstdint>
 #include <cstddef>
-#include "BatteryPacket.hpp"
+#include "packet/BatteryPacket.hpp"
 #include "Config.hpp"
 
 const uint8_t * BatteryPacket::toBuffer()

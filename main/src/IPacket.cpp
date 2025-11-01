@@ -7,7 +7,7 @@
 #include "coap3/coap.h"
 #include <cstdint>
 #include <cstddef>
-#include "IPacket.hpp"
+#include "packet/IPacket.hpp"
 #include "Config.hpp"
 
 static const char* TAG = "IPacket";

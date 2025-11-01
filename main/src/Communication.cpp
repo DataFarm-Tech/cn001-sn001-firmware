@@ -1,7 +1,7 @@
-#include "Communication.hpp"
-#include "WiFiConnection.hpp"
-#include "SimConnection.hpp"
-#include "EthernetConnection.hpp"
+#include "comm/Communication.hpp"
+#include "comm/WiFiConnection.hpp"
+#include "comm/SimConnection.hpp"
+#include "comm/EthernetConnection.hpp"
 
 Communication::Communication(ConnectionType type) 
 {
