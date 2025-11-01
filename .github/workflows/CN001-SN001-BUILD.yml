@@ -35,7 +35,7 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.LINODE_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.LINODE_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.LINODE_SECRET_KEY }}
-          AWS_S3_ENDPOINT: https://in-maa-1.linodeobjects.com
+          AWS_S3_ENDPOINT: http://df-ota.in-maa-1.linodeobjects.com/
           AWS_REGION: us-east-1
           SOURCE_DIR: build/
           DEST_DIR: firmware/
