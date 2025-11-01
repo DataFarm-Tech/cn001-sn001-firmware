@@ -18,13 +18,13 @@ bool SimConnection::connect()
 
     vTaskDelay(pdMS_TO_TICKS(3000)); // Simulate connection time
     ESP_LOGI(TAG, "SIM connected (simulated)");
-    return true;
+    return false;
 }
 
 bool SimConnection::isConnected() 
 {
     // TODO: Check modem status
-    return true; // Simulated
+    return false; // Simulated
 }
 
 void SimConnection::disconnect() 

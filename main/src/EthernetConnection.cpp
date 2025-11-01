@@ -18,12 +18,12 @@ bool EthernetConnection::connect()
 
     vTaskDelay(pdMS_TO_TICKS(3000));
     ESP_LOGI(TAG, "SIM connected (simulated)");
-    return true;
+    return false;
 }
 
 bool EthernetConnection::isConnected() 
 {
-    return true; // Simulated
+    return false; // Simulated
 }
 
 void EthernetConnection::disconnect() 
