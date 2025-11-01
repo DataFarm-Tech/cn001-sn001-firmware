@@ -16,8 +16,11 @@ private:
     uint8_t health;
 
 public:
-    BatteryPacket(const std::string& id, uint8_t lvl = 0, uint8_t hlth = 0)
-        : level(lvl), health(hlth) { nodeId = id; }
+    /**
+     * @brief The fo
+     */
+    BatteryPacket(const std::string& id, const std::string& uri_endpoint, uint8_t lvl = 0, uint8_t hlth = 0)
+        : level(lvl), health(hlth) { nodeId = id; uri = uri_endpoint; }
 
     uint8_t * toBuffer() override;
 

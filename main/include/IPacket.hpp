@@ -14,6 +14,7 @@ class IPacket {
 protected:
     std::string nodeId;
     size_t bufferLength = 0;
+    std::string uri;
 
     static coap_response_t message_handler(
         coap_session_t * session, 

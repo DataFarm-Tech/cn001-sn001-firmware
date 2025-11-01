@@ -1,7 +1,6 @@
 #include <iostream>
 #include "Communication.hpp"
 #include "esp_log.h"
-#include "Config.hpp"
 
 extern "C" {
     #include "freertos/FreeRTOS.h"
@@ -18,10 +17,8 @@ extern "C" {
 #include "lwip/sockets.h"
 #include "lwip/inet.h"
 #include <string.h>
-#include <vector>
-#include "esp_littlefs.h"
-#include <cstdint>
 #include "BatteryPacket.hpp"
+#include "Config.hpp"
 
 constexpr int sleep_time_sec = 6 * 60 * 60;
 
@@ -44,29 +41,22 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     
     Communication comm(ConnectionType::WIFI);
-    
-    if (!comm.connect()) 
-    {
-        ESP_LOGE("MAIN", "Failed to connect.");
-    }
-    else
-    {
-        ESP_LOGI("MAIN", "Connected.");
 
-        BatteryPacket battery("nod123");
+    if (comm.connect())
+    {
+        BatteryPacket battery(NODE_ID, URI_BATT);
 
-        if (!battery.readFromBMS()) {
+        if (!battery.readFromBMS()) 
+        {
             ESP_LOGE("MAIN", "Failed to read battery from BMS");
-        } else {
-            ESP_LOGI("MAIN", "Battery Level: %d, Health: %d", battery.getLevel(), battery.getHealth());
-
+        } 
+        else 
+        {
             battery.sendPacket();
-            ESP_LOGI("MAIN", "BatteryPacket sent successfully.");
         }
 
         if (comm.isConnected()) 
         {
-            ESP_LOGI("MAIN", "Still connected. Disconnecting...");
             comm.disconnect();
         }
     }

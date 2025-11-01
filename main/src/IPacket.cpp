@@ -68,8 +68,8 @@ void IPacket::sendPacket() {
     coap_register_response_handler(ctx, IPacket::message_handler);
 
 
-    if (coap_split_uri((const uint8_t *)URI, strlen(URI), &uri) == -1) {
-        ESP_LOGE(TAG, "Invalid URI: %s", URI);
+    if (coap_split_uri((const uint8_t *)this->uri.c_str(), strlen(this->uri.c_str()), &uri) == -1) {
+        ESP_LOGE(TAG, "Invalid URI: %s", this->uri.c_str());
         goto clean_up;
     }
 
