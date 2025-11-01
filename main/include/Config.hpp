@@ -6,3 +6,5 @@
 
 
 #define NODE_ID "nod123"
+
+#define BUFFER_SIZE 128

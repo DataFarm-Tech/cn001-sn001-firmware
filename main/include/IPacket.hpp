@@ -6,16 +6,33 @@
 #include <cbor.h>
 #include <sys/socket.h>
 #include "esp_log.h"
-#include "coap3/coap.h"
-#include <cstdint>
 #include <cstddef>
 
+/**
+ * @class IPacket
+ * @brief Abstract base class for packets used in CoAP communication.
+ *
+ * Provides an interface for creating, serializing, and sending packets
+ * over a CoAP network. Derived classes should implement the serialization
+ * method to convert packet data into a buffer.
+ */
 class IPacket {
 protected:
-    std::string nodeId;
-    size_t bufferLength = 0;
-    std::string uri;
+    std::string nodeId;        ///< Unique identifier for the node sending the packet
+    size_t bufferLength = 0;   ///< Length of the serialized packet buffer
+    std::string uri;           ///< URI endpoint for the CoAP packet
 
+    /**
+     * @brief CoAP message handler callback.
+     *
+     * Handles CoAP responses for a sent message.
+     *
+     * @param session Pointer to the CoAP session.
+     * @param sent Pointer to the sent PDU.
+     * @param received Pointer to the received PDU.
+     * @param mid Message ID of the CoAP message.
+     * @return coap_response_t indicating how the response was handled.
+     */
     static coap_response_t message_handler(
         coap_session_t * session, 
         const coap_pdu_t * sent, 
@@ -24,11 +41,35 @@ protected:
     );
 
 public:
+    /**
+     * @brief Virtual destructor.
+     *
+     * Ensures proper cleanup of derived packet classes.
+     */
     virtual ~IPacket() = default;
 
-    virtual uint8_t* toBuffer() = 0;
+    /**
+     * @brief Serializes the packet into a buffer.
+     *
+     * Must be implemented by derived classes to provide the packet
+     * data in a byte buffer suitable for sending over the network.
+     *
+     * @return Pointer to the serialized buffer.
+     */
+    virtual const uint8_t * toBuffer() = 0;
 
+    /**
+     * @brief Sends the packet over the network.
+     *
+     * Uses the CoAP protocol to transmit the serialized packet to
+     * the URI endpoint specified in the packet.
+     */
     void sendPacket();
-    
+
+    /**
+     * @brief Gets the length of the serialized packet buffer.
+     *
+     * @return Size of the buffer in bytes.
+     */
     size_t getBufferLength() const { return bufferLength; }
 };

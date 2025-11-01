@@ -20,7 +20,8 @@ extern "C" {
 #include "BatteryPacket.hpp"
 #include "Config.hpp"
 
-constexpr int sleep_time_sec = 6 * 60 * 60;
+// constexpr int sleep_time_sec = 6 * 60 * 60;
+constexpr int sleep_time_sec = 30;
 
 void init_nvs()
 {
@@ -36,6 +37,7 @@ void init_nvs()
 
 extern "C" void app_main(void) 
 {
+    printf("MY_COMPILE_TIME_VAR = %d\n", MY_COMPILE_TIME_VAR);
     init_nvs();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());

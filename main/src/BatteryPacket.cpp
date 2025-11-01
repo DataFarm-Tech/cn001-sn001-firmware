@@ -8,18 +8,19 @@
 #include <cstdint>
 #include <cstddef>
 #include "BatteryPacket.hpp"
+#include "Config.hpp"
 
-#define BUFFER_SIZE 128
-static const char* TAG = "BatteryPacket";
+static const char * TAG = "BatteryPacket";
 
 static uint8_t buffer[BUFFER_SIZE];
-static size_t bufferLength = 0;
 
-uint8_t* BatteryPacket::toBuffer() {
+const uint8_t * BatteryPacket::toBuffer()
+{
     CborEncoder encoder, mapEncoder, arrayEncoder, batteryEncoder;
     cbor_encoder_init(&encoder, buffer, BUFFER_SIZE, 0);
 
-    if (cbor_encoder_create_map(&encoder, &mapEncoder, 2) != CborNoError) {
+    if (cbor_encoder_create_map(&encoder, &mapEncoder, 2) != CborNoError) 
+    {
         ESP_LOGE(TAG, "Failed to create root map");
         return nullptr;
     }
@@ -47,7 +48,8 @@ uint8_t* BatteryPacket::toBuffer() {
 }
 
 
-bool BatteryPacket::readFromBMS() {
+bool BatteryPacket::readFromBMS() 
+{
     // TODO: implement real BMS reading (UART/I2C/CAN)
     // For now, simulate data:
     level = 90;

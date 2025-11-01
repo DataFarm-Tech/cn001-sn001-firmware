@@ -15,3 +15,9 @@ idf_component_register(
         cbor
         littlefs
 )
+
+# Declare a compile-time variable for this component only
+set(MY_COMPILE_TIME_VAR 123 CACHE STRING "Local compile-time variable")
+
+# Pass it to the compiler
+target_compile_definitions(${COMPONENT_LIB} PRIVATE MY_COMPILE_TIME_VAR=${MY_COMPILE_TIME_VAR})

@@ -10,8 +10,6 @@
 #include "IPacket.hpp"
 #include "Config.hpp"
 
-#define URI_BUFFER_SIZE 128
-
 static const char* TAG = "IPacket";
 static int resp_wait = 0;
 static int wait_ms = 1000;
@@ -45,7 +43,7 @@ coap_response_t IPacket::message_handler(coap_session_t * session, const coap_pd
 }
 
 void IPacket::sendPacket() {
-    uint8_t * buffer = toBuffer();
+    const uint8_t * buffer = toBuffer();
     coap_context_t * ctx = nullptr;
     coap_session_t * session = nullptr;
     coap_pdu_t * request = nullptr;
@@ -54,7 +52,7 @@ void IPacket::sendPacket() {
     coap_addr_info_t * info_list = nullptr;
     coap_proto_t proto;
 
-    uint8_t uri_path[URI_BUFFER_SIZE];
+    uint8_t uri_path[BUFFER_SIZE];
 
     coap_startup();
 
