@@ -9,6 +9,19 @@
 #include <cstddef>
 
 /**
+ * @enum CoAPResponseType
+ * @brief Defines available CoAP response types
+ *
+ * Used to specify which network interface should be initialized
+ * for data transmission.
+ */
+enum class CoAPResponseType : uint8_t {
+    COAP_RESPONSE = 2,
+    COAP_RESPONSE_CLIENT_ERROR = 4,
+    COAP_RESPONSE_SERVER_ERROR = 5
+};
+
+/**
  * @class IPacket
  * @brief Abstract base class for packets used in CoAP communication.
  *
