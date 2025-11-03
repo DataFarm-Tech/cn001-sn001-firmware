@@ -34,7 +34,7 @@ void init_nvs()
 
 extern "C" void app_main(void) 
 {
-    const esp_app_desc_t *app_desc = esp_app_get_description();
+    const esp_app_desc_t * app_desc = esp_app_get_description();
     ESP_LOGI("MAIN", "Current firmware version: %s", app_desc->version);
 
     while (1)
