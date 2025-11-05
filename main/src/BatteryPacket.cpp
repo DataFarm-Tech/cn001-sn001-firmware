@@ -20,6 +20,12 @@ const uint8_t * BatteryPacket::toBuffer()
         return nullptr;
     }
 
+    if (level == 0 || health == 0)
+    {
+        return nullptr;
+    }
+    
+
     cbor_encode_text_stringz(&mapEncoder, "node_id");
     cbor_encode_text_stringz(&mapEncoder, nodeId.c_str());
 
