@@ -59,16 +59,4 @@ public:
      * actual hardware interfaces such as UART, I2C, or CAN bus communication.
      */
     bool readFromBMS();
-
-    /**
-     * @brief Retrieves the battery level value.
-     * @return Battery level as a percentage (0–100).
-     */
-    uint8_t getLevel() const { return level; }
-
-    /**
-     * @brief Retrieves the battery health value.
-     * @return Battery health as a percentage (0–100).
-     */
-    uint8_t getHealth() const { return health; }
 };
