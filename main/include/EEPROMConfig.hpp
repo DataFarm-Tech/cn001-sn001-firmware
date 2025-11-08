@@ -20,6 +20,8 @@ private:
     const char* NAMESPACE = "config_ns";
     const char* KEY = "device_cfg";
 
+    void init_nvs();
+
 public:
     // Inline constructor
     EEPROMConfig() : handle(0) {}

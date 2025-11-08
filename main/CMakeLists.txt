@@ -7,7 +7,6 @@ idf_component_register(
         "src/EthernetConnection.cpp"
         "src/BatteryPacket.cpp"
         "src/IPacket.cpp"
-        # "src/OTAUpdater.cpp"
         "src/ReadingPacket.cpp"
         "src/ActivatePacket.cpp"
         "src/EEPROMConfig.cpp"
