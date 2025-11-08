@@ -8,5 +8,3 @@ constexpr char DATA_URI[] = "coap://45.79.239.100/reading";
 
 constexpr char BATT_TAG[] = "BatteryPacket";
 constexpr char DATA_TAG[] = "DataPacket";
-
-constexpr uint8_t BUFFER_SIZE = 128;

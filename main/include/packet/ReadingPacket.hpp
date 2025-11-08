@@ -12,7 +12,7 @@ struct sensorReading
 
 class ReadingPacket : public IPacket {
     private:
-        static constexpr size_t READING_SIZE = 10;
+        static constexpr size_t READING_SIZE = 35;
         std::array<sensorReading, READING_SIZE> readingList;
         std::string TAG;
 

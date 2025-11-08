@@ -45,7 +45,7 @@ extern "C" void app_main(void)
 
         if (comm.connect())
         {
-            ReadingPacket readings(NODE_ID, DATA_URI, "ReadingPacket");
+            ReadingPacket readings(NODE_ID, DATA_URI, DATA_TAG);
 
             ESP_LOGI("MAIN", "Collecting sensor readings...");
             readings.readSensor();

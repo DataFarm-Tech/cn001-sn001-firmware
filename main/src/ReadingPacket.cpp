@@ -46,8 +46,11 @@ const uint8_t * ReadingPacket::toBuffer()
     cbor_encoder_close_container(&encoder, &mapEncoder);
 
     bufferLength = cbor_encoder_get_buffer_size(&encoder, buffer);
-    ESP_LOGI(TAG.c_str(), "CBOR payload length: %d", (int)bufferLength);
-
+    if (bufferLength > BUFFER_SIZE) {
+        ESP_LOGE(TAG.c_str(), "CBOR buffer overflow: %d bytes (max %d)", (int)bufferLength, BUFFER_SIZE);
+        return nullptr;
+    }
+    
     return buffer;
 }
 
@@ -58,7 +61,7 @@ void ReadingPacket::readSensor()
     
     ESP_LOGI(TAG.c_str(), "Starting sensor reading sequence...");
 
-    // Seed the random generator once (you can also do this in setup/init)
+    //TODO: remove this.
     srand(static_cast<unsigned>(time(nullptr)));
 
     for (size_t i = 0; i < READING_SIZE; i++)
