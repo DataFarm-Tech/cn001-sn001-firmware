@@ -61,17 +61,16 @@ void ReadingPacket::readSensor()
     
     ESP_LOGI(TAG.c_str(), "Starting sensor reading sequence...");
 
-    //TODO: remove this.
+    // TODO: remove this for production
     srand(static_cast<unsigned>(time(nullptr)));
 
     for (size_t i = 0; i < READING_SIZE; i++)
     {
-        // Simulate sensor data with realistic random ranges
-        // Example: temperature between 20.0–30.0 °C, pH between 5.0–8.0
-        reading.temp = 20.0f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 10.0f)); // [20–30]
-        reading.ph   = 5.0f  + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 3.0f));  // [5–8]
+        // Generate temperature [20.0, 30.0] and pH [5.0, 8.0]
+        reading.temp = 20.0f + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * 10.0f; // [20–30]
+        reading.ph   = 5.0f  + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * 3.0f;  // [5–8]
 
-        readingList.at(i) = reading; // store into array
+        readingList.at(i) = reading;
 
         ESP_LOGI(TAG.c_str(), "Reading %02d -> Temp: %.2f °C, pH: %.2f", (int)i, reading.temp, reading.ph);
 
@@ -80,4 +79,3 @@ void ReadingPacket::readSensor()
 
     ESP_LOGI(TAG.c_str(), "Finished collecting %d readings", (int)READING_SIZE);
 }
-

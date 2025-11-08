@@ -36,7 +36,7 @@ coap_response_t IPacket::message_handler(coap_session_t * session, const coap_pd
 }
 
 void IPacket::sendPacket() {
-    const uint8_t * buffer = toBuffer();
+    const uint8_t * buf_ptr = toBuffer();
     coap_context_t * ctx = nullptr;
     coap_optlist_t * optlist = nullptr;
     coap_session_t * session = nullptr;
@@ -48,8 +48,8 @@ void IPacket::sendPacket() {
     uint16_t wait_ms = 500;
     uint8_t uri_path[BUFFER_SIZE];
 
-    if (buffer == nullptr || bufferLength == 0) {
-        ESP_LOGE(TAG, "Packet buffer is null or empty — aborting send");
+    if (buf_ptr == nullptr || bufferLength == 0) {
+        ESP_LOGE(TAG, "Packet buf_ptr is null or empty — aborting send");
         return;
     }
 
@@ -102,7 +102,7 @@ void IPacket::sendPacket() {
     coap_add_option(request, COAP_OPTION_CONTENT_FORMAT,
                     coap_encode_var_safe(buf, sizeof(buf), COAP_MEDIATYPE_APPLICATION_CBOR),
                     buf);
-    coap_add_data(request, bufferLength, buffer);
+    coap_add_data(request, bufferLength, buf_ptr);
 
     resp_wait = true;
     coap_send(session, request);

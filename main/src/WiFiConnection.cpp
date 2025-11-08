@@ -9,8 +9,6 @@
 #define WIFI_SSID "NETGEAR77"
 #define WIFI_PASS "aquaticcarrot628"
 
-// #define DHCP_EN 1
-
 void WifiConnection::wifi_event_handler(void * arg, esp_event_base_t event_base, int32_t event_id, void * event_data) 
 {
     WifiConnection * self = static_cast<WifiConnection*>(arg);
@@ -37,11 +35,11 @@ bool WifiConnection::connect()
 
     esp_netif_init();
     esp_event_loop_create_default();
+    
     esp_netif_t * netif = esp_netif_create_default_wifi_sta();
-
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
+    
     #if DHCP_EN == 0
         esp_netif_ip_info_t ip_info;
         esp_netif_dns_info_t dns;

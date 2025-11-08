@@ -13,7 +13,6 @@ const uint8_t * ActivatePacket::toBuffer()
     }
 
     //TODO: Get GPS Coordinates from GPS MOD
-
     std::string gps_coor = "00.00.00.00";
 
     // node_id
