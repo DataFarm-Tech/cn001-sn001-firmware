@@ -1,43 +1,63 @@
 #include <iostream>
 #include "comm/Communication.hpp"
 #include "esp_log.h"
+
 extern "C" {
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "nvs_flash.h"
 #include "esp_sleep.h"
 }
-#include "esp_log.h"
+
 #include "esp_event.h"
 #include "esp_wifi.h"
 #include "esp_system.h"
-#include "nvs_flash.h"
 #include "lwip/sockets.h"
 #include "lwip/inet.h"
 #include <string.h>
 #include "packet/BatteryPacket.hpp"
 #include "packet/ReadingPacket.hpp"
+#include "packet/ActivatePacket.hpp"
 #include "Config.hpp"
 #include "ota/OTAUpdater.hpp"
+#include "EEPROMConfig.hpp"
 
-constexpr int sleep_time_sec = 1 * 60 * 60;
+// constexpr int sleep_time_sec = 1 * 60 * 60;
+constexpr int sleep_time_sec = 60;
+
+DeviceConfig g_device_config = { false };
+
+const char * TAG = "MAIN";
 
 void init_nvs()
 {
     esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) 
-    {
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
 }
 
-extern "C" void app_main(void) 
+extern "C" void app_main(void)
 {
+    init_nvs();
+
+    EEPROMConfig eeprom;
+
+    if (!eeprom.begin()) {
+        ESP_LOGE(TAG, "Failed to open EEPROM config");
+        return;
+    }
+
+    if (!eeprom.loadConfig(g_device_config)) {
+        ESP_LOGW(TAG, "No previous config found, initializing default...");
+        g_device_config.has_activated = false;
+        eeprom.saveConfig(g_device_config);
+    }
+
     while (1)
     {
-        init_nvs();
         ESP_ERROR_CHECK(esp_netif_init());
         ESP_ERROR_CHECK(esp_event_loop_create_default());
         
@@ -45,15 +65,24 @@ extern "C" void app_main(void)
 
         if (comm.connect())
         {
+            if (!g_device_config.has_activated) {
+                ESP_LOGI(TAG, "Sending activation packet...");
+                ActivatePacket activate(NODE_ID, ACT_URI, "activate");
+                activate.sendPacket();
+
+                g_device_config.has_activated = true; // Mark as activated and save it
+                eeprom.saveConfig(g_device_config);
+            } else {
+                ESP_LOGI(TAG, "Already activated — skipping activation packet.");
+            }
+
+            // Send readings
             ReadingPacket readings(NODE_ID, DATA_URI, DATA_TAG);
-
-            ESP_LOGI("MAIN", "Collecting sensor readings...");
+            ESP_LOGI(TAG, "Collecting sensor readings...");
+            
             readings.readSensor();
-
-            ESP_LOGI("MAIN", "Sending readings packet...");
             readings.sendPacket();
-            
-            
+
             BatteryPacket battery(NODE_ID, BATT_URI, 0, 0, BATT_TAG);
             
             if (!battery.readFromBMS())
@@ -72,7 +101,9 @@ extern "C" void app_main(void)
                 comm.disconnect();
             }
         }
-        
+
+        eeprom.close();
+
         #if DEEP_SLEEP_EN == 1
             break;
         #else

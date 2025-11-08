@@ -9,6 +9,8 @@ idf_component_register(
         "src/IPacket.cpp"
         # "src/OTAUpdater.cpp"
         "src/ReadingPacket.cpp"
+        "src/ActivatePacket.cpp"
+        "src/EEPROMConfig.cpp"
     INCLUDE_DIRS "include"
     REQUIRES 
         nvs_flash
