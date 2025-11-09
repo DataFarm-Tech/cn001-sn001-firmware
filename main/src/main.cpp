@@ -22,7 +22,7 @@ extern "C" {
 #include "ota/OTAUpdater.hpp"
 #include "EEPROMConfig.hpp"
 
-constexpr int sleep_time_sec = 60;
+constexpr int sleep_time_sec = 60 * 60 * 1;
 
 DeviceConfig g_device_config = { false };
 
@@ -52,19 +52,27 @@ extern "C" void app_main(void)
 
         if (comm.connect())
         {
-            if (!g_device_config.has_activated) {
+            #if ACT_EN == 1
+                if (!g_device_config.has_activated) 
+                {
+                    ESP_LOGI(TAG, "Sending activation packet...");
+                    ActivatePacket activate(NODE_ID, ACT_URI, "activate");
+                    activate.sendPacket();
+
+                    g_device_config.has_activated = true; // Mark as activated and save it
+                    eeprom.saveConfig(g_device_config);
+                } 
+                else 
+                {
+                    ESP_LOGI(TAG, "Already activated — skipping activation packet.");
+                }
+            #else
                 ESP_LOGI(TAG, "Sending activation packet...");
                 ActivatePacket activate(NODE_ID, ACT_URI, "activate");
                 activate.sendPacket();
+            #endif
 
-                g_device_config.has_activated = true; // Mark as activated and save it
-                eeprom.saveConfig(g_device_config);
-            } else {
-                ESP_LOGI(TAG, "Already activated — skipping activation packet.");
-            }
-
-            // Send readings
-            ReadingPacket readings(NODE_ID, DATA_URI, DATA_TAG);
+            ReadingPacket readings(NODE_ID, DATA_URI, DATA_TAG); // Send readings
             ESP_LOGI(TAG, "Collecting sensor readings...");
             
             readings.readSensor();

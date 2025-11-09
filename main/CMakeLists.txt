@@ -37,3 +37,6 @@ target_compile_definitions(${COMPONENT_LIB} PRIVATE DEEP_SLEEP_EN=${DEEP_SLEEP_E
 
 set(DHCP_EN 1)
 target_compile_definitions(${COMPONENT_LIB} PRIVATE DHCP_EN=${DHCP_EN})
+
+set(ACT_EN 0)
+target_compile_definitions(${COMPONENT_LIB} PRIVATE ACT_EN=${ACT_EN})
