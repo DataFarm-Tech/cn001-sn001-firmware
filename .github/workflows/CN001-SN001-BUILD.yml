@@ -1,4 +1,4 @@
-name: CI/CD CN001/SN001 Build/Test
+name: CI/CD ESP-IDF Build
 
 on:
   push:
@@ -10,25 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          submodules: "true"
+          submodules: true
 
-      - name: Set up Python
-        uses: actions/setup-python@v1
-
-      - name: Install dependencies
+      - name: Set firmware version from git hash and create version.json
         run: |
-          python -m pip install --upgrade pip
-          sudo pip install platformio
-          sudo apt-get update
-          sudo apt-get install -y cppcheck
+          HASH=$(git rev-parse --short HEAD)
+          FW_VERSION="g$HASH"
+          echo "FW_VERSION=$FW_VERSION" >> $GITHUB_ENV
+          FW_URL="https://df-ota.in-maa-1.linodeobjects.com/images/${FW_VERSION}.bin"
 
-      - name: Install PlatformIO libraries
-        run: sudo pio lib install
+      - name: Install ESP-IDF
+        uses: espressif/install-esp-idf-action@v1
+        with:
+          version: v6.0
 
-      - name: Run Cppcheck
-        run: cppcheck $(cat cppcheck.conf)
+      - name: Build ESP-IDF project
+        run: |
+          idf.py fullclean build -D PROJECT_VER=$FW_VERSION
 
-      - name: Run PlatformIO
-        run: ./flash.sh compile
+      - name: Upload BIN and version.json to Linode Object Storage
+        run: |
+          echo "Uploading firmware ${FW_VERSION}.bin ..."
+          curl -X PUT -T build/firmware-idf.bin \
+            https://df-ota.in-maa-1.linodeobjects.com/images/${FW_VERSION}.bin

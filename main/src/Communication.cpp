@@ -1,0 +1,35 @@
+#include "comm/Communication.hpp"
+#include "comm/WiFiConnection.hpp"
+#include "comm/SimConnection.hpp"
+#include "comm/EthernetConnection.hpp"
+
+Communication::Communication(ConnectionType type) 
+{
+    switch (type) 
+    {
+        case ConnectionType::WIFI:
+            connection = std::make_unique<WifiConnection>();
+            break;
+        case ConnectionType::SIM:
+            connection = std::make_unique<SimConnection>();
+            break;
+        case ConnectionType::ETHERNET:
+            connection = std::make_unique<EthernetConnection>();
+            break;
+    }
+}
+
+bool Communication::connect() 
+{
+    return connection->connect();
+}
+
+bool Communication::isConnected() 
+{
+    return connection->isConnected();
+}
+
+void Communication::disconnect() 
+{
+    connection->disconnect();
+}
