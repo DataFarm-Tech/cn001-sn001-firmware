@@ -22,23 +22,19 @@ extern "C" {
 #include "ota/OTAUpdater.hpp"
 #include "EEPROMConfig.hpp"
 
-constexpr int sleep_time_sec = 60 * 60 * 1;
-
 DeviceConfig g_device_config = { false };
-
-const char * TAG = "MAIN";
 
 extern "C" void app_main(void)
 {
     EEPROMConfig eeprom;
 
     if (!eeprom.begin()) {
-        ESP_LOGE(TAG, "Failed to open EEPROM config");
+        ESP_LOGE("MAIN", "Failed to open EEPROM config");
         return;
     }
 
     if (!eeprom.loadConfig(g_device_config)) {
-        ESP_LOGW(TAG, "No previous config found, initializing default...");
+        ESP_LOGW("MAIN", "No previous config found, initializing default...");
         g_device_config.has_activated = false;
         eeprom.saveConfig(g_device_config);
     }
@@ -52,28 +48,22 @@ extern "C" void app_main(void)
 
         if (comm.connect())
         {
-            #if ACT_EN == 1
-                if (!g_device_config.has_activated) 
-                {
-                    ESP_LOGI(TAG, "Sending activation packet...");
-                    ActivatePacket activate(NODE_ID, ACT_URI, "activate");
-                    activate.sendPacket();
-
-                    g_device_config.has_activated = true; // Mark as activated and save it
-                    eeprom.saveConfig(g_device_config);
-                } 
-                else 
-                {
-                    ESP_LOGI(TAG, "Already activated — skipping activation packet.");
-                }
-            #else
-                ESP_LOGI(TAG, "Sending activation packet...");
+            if (!g_device_config.has_activated) 
+            {
+                ESP_LOGI("MAIN", "Sending activation packet...");
                 ActivatePacket activate(NODE_ID, ACT_URI, "activate");
                 activate.sendPacket();
-            #endif
 
+                g_device_config.has_activated = true; // Mark as activated and save it
+                eeprom.saveConfig(g_device_config);
+            } 
+            else 
+            {
+                ESP_LOGI("MAIN", "Already activated — skipping activation packet.");
+            }
+        
             ReadingPacket readings(NODE_ID, DATA_URI, DATA_TAG); // Send readings
-            ESP_LOGI(TAG, "Collecting sensor readings...");
+            ESP_LOGI("MAIN", "Collecting sensor readings...");
             
             readings.readSensor();
             readings.sendPacket();

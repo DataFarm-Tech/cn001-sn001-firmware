@@ -9,3 +9,5 @@ constexpr char ACT_URI[] = "coap://192.168.1.44/activate";
 
 constexpr char BATT_TAG[] = "BatteryPacket";
 constexpr char DATA_TAG[] = "DataPacket";
+
+constexpr int sleep_time_sec = 60 * 60 * 1;
