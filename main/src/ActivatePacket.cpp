@@ -33,7 +33,7 @@ const uint8_t * ActivatePacket::toBuffer()
     computeKey(hmac);
 
     // TODO: Get GPS Coordinates from GPS MOD
-    std::string gps_coor = "00.00.00.00";
+    std::string gps_coor = "37.421998, -122.084000";
 
     // node_id
     cbor_encode_text_stringz(&mapEncoder, "node_id");
