@@ -10,6 +10,7 @@ idf_component_register(
         "src/ReadingPacket.cpp"
         "src/ActivatePacket.cpp"
         "src/EEPROMConfig.cpp"
+        "src/I2CDriver.cpp"
     INCLUDE_DIRS "include"
     REQUIRES 
         nvs_flash
@@ -20,6 +21,7 @@ idf_component_register(
         esp_https_ota
         app_update
         esp_http_client
+    driver
 )
 
 # Enable all warnings for GCC/Clang
