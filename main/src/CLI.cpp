@@ -104,19 +104,35 @@ extern "C" void cli_task(void*) {
     while (true) {
         uint8_t c;
         if (UARTConsole::readByte(c) > 0) {
+
+            // ──────────────── Handle ENTER ────────────────
             if (c == '\n' || c == '\r') {
                 line[idx] = 0;
                 UARTConsole::write("\r\n");
                 exec(line);
                 idx = 0;
                 UARTConsole::write("> ");
-            } else if (c >= 32 && c < 127 && idx < BUF_SIZE - 1) {
+            }
+
+            // ──────────────── Handle BACKSPACE ────────────────
+            else if ((c == 0x08 || c == 0x7F)) {  // 0x08 = BS, 0x7F = DEL
+                if (idx > 0) {
+                    idx--;
+
+                    // Erase character from terminal
+                    UARTConsole::write("\b \b");
+                }
+            }
+
+            // ──────────────── Printable characters ────────────────
+            else if (c >= 32 && c < 127 && idx < BUF_SIZE - 1) {
                 line[idx++] = c;
                 uart_write_bytes(UART_NUM_0, (char*)&c, 1);
             }
         }
     }
 }
+
 
 void CLI::start() {
     xTaskCreate(cli_task, "cli_task", 4096, NULL, 1, NULL);
