@@ -121,8 +121,8 @@ extern "C" void app_main(void)
             }
 
             
-            if (comm.isConnected())
-                comm.disconnect();
+            // if (comm.isConnected())
+            //     comm.disconnect();
         }
         else {
             ESP_LOGI("MAIN", "Unable to connect");
