@@ -34,17 +34,6 @@ DeviceConfig g_device_config = { false, nodeId };
 
 
 extern "C" void app_main(void)
-<<<<<<< HEAD
-{
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    
-    Communication comm(ConnectionType::WIFI);
-    EEPROMConfig eeprom;
-    ReadingPacket readings(NODE_ID, DATA_URI, DATA_TAG); // Send readings
-    ActivatePacket activate(NODE_ID, ACT_URI, "activate");
-    BatteryPacket battery(NODE_ID, BATT_URI, 0, 0, BATT_TAG);
-=======
 {   
     // Check wakeup cause and reset reason
     esp_sleep_wakeup_cause_t wakeup_reason;
@@ -55,7 +44,6 @@ extern "C" void app_main(void)
     ActivatePacket activate(g_device_config.nodeId.getNodeID(), ACT_URI, ACT_TAG);
     ReadingPacket readings(g_device_config.nodeId.getNodeID(), DATA_URI, DATA_TAG);
     const char* url = "http://45.79.118.187:8080/release/latest/cn1.bin";
->>>>>>> 183cfe2bd18d02901c4f096a74d86378a367053e
 
 
     // Start CLI task
