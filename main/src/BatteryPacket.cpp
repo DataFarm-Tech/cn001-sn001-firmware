@@ -6,8 +6,21 @@
 #include "esp_log.h"
 #include <cstdint>
 #include <cstddef>
+#include <algorithm>
+#include <cmath>
 #include "packet/BatteryPacket.hpp"
 #include "Config.hpp"
+#include "freertos/FreeRTOS.h"
+#include "I2CDriver.hpp"
+
+constexpr uint8_t MAX17048_I2C_ADDRESS = 0x36;
+constexpr uint8_t MAX17048_REG_VCELL = 0x02;
+constexpr uint8_t MAX17048_REG_SOC = 0x04;
+
+constexpr i2c_port_t BATT_I2C_PORT = I2C_NUM_0;
+constexpr gpio_num_t BATT_I2C_SDA = GPIO_NUM_3;  // SDA per Waveshare schematic
+constexpr gpio_num_t BATT_I2C_SCL = GPIO_NUM_2;  // SCL per Waveshare schematic
+constexpr uint32_t BATT_I2C_FREQ_HZ = 400000;
 
 const uint8_t * BatteryPacket::toBuffer()
 {
@@ -20,7 +33,7 @@ const uint8_t * BatteryPacket::toBuffer()
         return nullptr;
     }
 
-    if (level == 0 || health == 0)
+    if (level == 0 && health == 0)
     {
         ESP_LOGE(TAG.c_str(), "Cannot append empty battery diagnostics to buffer");
         return nullptr;
@@ -54,11 +67,42 @@ const uint8_t * BatteryPacket::toBuffer()
 }
 
 
-bool BatteryPacket::readFromBMS() 
+bool BatteryPacket::readFromBMS()
 {
-    // TODO: implement real BMS reading (UART/I2C/CAN)
-    // For now, simulate data:
-    level = 90;
-    health = 100;
+    // Static I2C driver instance - initialized once and reused
+    static I2CDriver i2c(BATT_I2C_PORT, BATT_I2C_SDA, BATT_I2C_SCL, BATT_I2C_FREQ_HZ);
+
+    //Reading voltage into rawVcell
+    uint8_t rawVcell[2] = {0};
+    uint8_t regVcell = MAX17048_REG_VCELL;
+    if (!i2c.writeRead(MAX17048_I2C_ADDRESS, &regVcell, 1, rawVcell, sizeof(rawVcell))) {
+        ESP_LOGE(TAG.c_str(), "Failed to read MAX17048 VCELL register");
+        return false;
+    }
+
+    uint16_t rawVoltage = (static_cast<uint16_t>(rawVcell[0]) << 8) | rawVcell[1];
+    float voltage = static_cast<float>(rawVoltage >> 4) * 0.00125f; // Each LSB = 1.25 mV
+    
+    //Reading SOC into rawSOC
+    uint8_t rawSoc[2] = {0};
+    uint8_t regSoc = MAX17048_REG_SOC;
+    if (!i2c.writeRead(MAX17048_I2C_ADDRESS, &regSoc, 1, rawSoc, sizeof(rawSoc))) {
+        ESP_LOGE(TAG.c_str(), "Failed to read MAX17048 SOC register");
+        return false;
+    }
+
+    uint16_t socRaw = (static_cast<uint16_t>(rawSoc[0]) << 8) | rawSoc[1];
+    float socPercent = static_cast<float>(socRaw) / 256.0f; // 1/256 % per LSB
+
+    int roundedSoc = static_cast<int>(std::roundf(socPercent));
+    roundedSoc = std::clamp(roundedSoc, 0, 100);
+
+    level = static_cast<uint8_t>(roundedSoc);
+    health = 100; // No direct health metric from MAX17048
+
+    ESP_LOGI(TAG.c_str(),
+             "MAX17048: voltage=%.3f V, SoC=%.2f%% (stored %u%%)",
+             voltage, socPercent, static_cast<unsigned>(level));
+
     return true;
 }
