@@ -43,10 +43,10 @@ void IPacket::sendPacket() {
     coap_session_t * session = nullptr;
     coap_pdu_t * request = nullptr;
     coap_address_t dst_addr;
-    static coap_uri_t uri;
+    static coap_uri_t uri_t;
     coap_addr_info_t * info_list = nullptr;
     coap_proto_t proto;
-    uint16_t wait_ms = 500;
+    int wait_ms = 500;
     uint8_t uri_path[BUFFER_SIZE];
 
     if (buf_ptr == nullptr || bufferLength == 0) {
@@ -65,15 +65,15 @@ void IPacket::sendPacket() {
     coap_context_set_block_mode(ctx, COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
     coap_register_response_handler(ctx, IPacket::message_handler);
 
-    if (coap_split_uri((const uint8_t *)this->uri.c_str(), strlen(this->uri.c_str()), &uri) == -1) {
+    if (coap_split_uri((const uint8_t *)this->uri.c_str(), strlen(this->uri.c_str()), &uri_t) == -1) {
         ESP_LOGE(TAG, "Invalid URI: %s", this->uri.c_str());
         goto clean_up;
     }
 
-    use_dtls = (uri.scheme == COAP_URI_SCHEME_COAPS ||
-                     uri.scheme == COAP_URI_SCHEME_COAPS_TCP);
+    use_dtls = (uri_t.scheme == COAP_URI_SCHEME_COAPS ||
+                     uri_t.scheme == COAP_URI_SCHEME_COAPS_TCP);
 
-    info_list = coap_resolve_address_info(&uri.host, uri.port, uri.port, uri.port, uri.port, 0, 1 << uri.scheme, COAP_RESOLVE_TYPE_REMOTE);
+    info_list = coap_resolve_address_info(&uri_t.host, uri_t.port, uri_t.port, uri_t.port, uri_t.port, 0, 1 << uri_t.scheme, COAP_RESOLVE_TYPE_REMOTE);
     if (!info_list) {
         ESP_LOGE(TAG, "Address resolution failed");
         goto clean_up;
@@ -87,7 +87,7 @@ void IPacket::sendPacket() {
         proto = COAP_PROTO_DTLS;
     }
 
-    if (coap_uri_into_options(&uri, &dst_addr, &optlist, 1, uri_path, sizeof(uri_path)) < 0) {
+    if (coap_uri_into_options(&uri_t, &dst_addr, &optlist, 1, uri_path, sizeof(uri_path)) < 0) {
         ESP_LOGE(TAG, "Failed to create URI options");
         goto clean_up;
     }
