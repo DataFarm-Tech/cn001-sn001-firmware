@@ -7,6 +7,7 @@ extern "C" {
 #include "freertos/task.h"
 #include "nvs_flash.h"
 #include "esp_sleep.h"
+#include "driver/uart.h"
 }
 
 #include "esp_event.h"
@@ -19,88 +20,110 @@ extern "C" {
 #include "packet/ReadingPacket.hpp"
 #include "packet/ActivatePacket.hpp"
 #include "Config.hpp"
-#include "ota/OTAUpdater.hpp"
+#include "esp_ota_ops.h"
+#include "esp_http_client.h"
+#include "esp_https_ota.h"
 #include "EEPROMConfig.hpp"
 #include "Node.hpp"
+#include "UARTConsole.hpp"
+#include "CLI.hpp"
+#include "ota/OTAUpdater.hpp"
 
 Node nodeId;
-DeviceConfig g_device_config = { false, nodeId};
+DeviceConfig g_device_config = { false, nodeId };
+
 
 extern "C" void app_main(void)
-{
-    // // --- Battery Test Code ---
-    // ESP_LOGI("MAIN", "Starting battery percentage test...");
-    // BatteryPacket battery(NODE_ID, BATT_URI, 0, 0, BATT_TAG);
-
-    // while (1) {
-    //     if (!battery.readFromBMS()) {
-    //         ESP_LOGE("MAIN", "Failed to read battery from BMS");
-    //     }
-    //     // The battery level is logged inside readFromBMS()
-    //     vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds
-    // }
-
-
-    // --- Original Application Code ---
+{   
+    // Check wakeup cause and reset reason
+    esp_sleep_wakeup_cause_t wakeup_reason;
+    esp_reset_reason_t reset_reason;
+    OTAUpdater ota;
     EEPROMConfig eeprom;
+    Communication comm(ConnectionType::WIFI);
+    ActivatePacket activate(g_device_config.nodeId.getNodeID(), ACT_URI, ACT_TAG);
+    ReadingPacket readings(g_device_config.nodeId.getNodeID(), DATA_URI, DATA_TAG);
+    const char* url = "http://45.79.118.187:8080/release/latest/cn1.bin";
 
-    if (!eeprom.begin()) {
+
+    // Start CLI task
+    UARTConsole::init(115200);
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    CLI::start();
+
+    wakeup_reason = esp_sleep_get_wakeup_cause();
+    reset_reason = esp_reset_reason();
+    
+    // Original application code
+    vTaskDelay(pdMS_TO_TICKS(500));
+    
+    if (!eeprom.begin()) 
+    {
         ESP_LOGE("MAIN", "Failed to open EEPROM config");
         return;
     }
 
-    if (!eeprom.loadConfig(g_device_config)) {
+    if (!eeprom.loadConfig(g_device_config)) 
+    {
         ESP_LOGW("MAIN", "No previous config found, initializing default...");
         g_device_config.has_activated = false;
         eeprom.saveConfig(g_device_config);
     }
 
-    while (1)
+    while (1) 
     {
-        ESP_ERROR_CHECK(esp_netif_init());
-        ESP_ERROR_CHECK(esp_event_loop_create_default());
-        
-        Communication comm(ConnectionType::WIFI);
-
-        if (comm.connect())
+        if (comm.connect()) 
         {
             if (!g_device_config.has_activated) 
             {
                 ESP_LOGI("MAIN", "Sending activation packet...");
-                ActivatePacket activate(g_device_config.nodeId.getNodeID(), ACT_URI, ACT_TAG);
                 activate.sendPacket();
-
-                g_device_config.has_activated = true; // Mark as activated and save it
+                g_device_config.has_activated = true;
                 eeprom.saveConfig(g_device_config);
             } 
             else 
             {
-                ESP_LOGI("MAIN", "Already activated — skipping activation packet.");
+                ESP_LOGI("MAIN", "Already activated.");
             }
-        
-            ReadingPacket readings(g_device_config.nodeId.getNodeID(), DATA_URI, DATA_TAG); // Send readings
+
             ESP_LOGI("MAIN", "Collecting sensor readings...");
-            
             readings.readSensor();
             readings.sendPacket();
-
-            BatteryPacket battery(g_device_config.nodeId.getNodeID(), BATT_URI, 0, 0, BATT_TAG);
             
-            if (!battery.readFromBMS())
+            // BatteryPacket battery(g_device_config.nodeId.getNodeID(), BATT_URI, 0, 0, BATT_TAG);
+            // if (!battery.readFromBMS()) {
+            //     ESP_LOGE("MAIN", "Failed to read battery.");
+            // } else {
+            //     ESP_LOGI("MAIN", "Sending battery packet...");
+            //     battery.sendPacket();
+            // }
+
+            // Only run OTA update on power-on (not on reboot or deep sleep wakeup)
+            if (reset_reason == ESP_RST_POWERON) 
             {
-                ESP_LOGE("MAIN", "Failed to read battery from BMS");
-            } 
-            else 
-            {
-                ESP_LOGI("MAIN", "Sending battery packet...");
-                battery.sendPacket();
+                printf("Power-on detected. Checking for OTA update...\n");
+                   
+                if (ota.update("http://45.79.118.187:8080/release/latest/cn1.bin")) 
+                {
+                    printf("OTA OK. Rebooting...\n");
+                    vTaskDelay(pdMS_TO_TICKS(2000));
+                    esp_restart();
+                } 
+                else 
+                {
+                    printf("OTA FAILED or no update needed\n");
+                }
             }
 
-            // Close connection
-            if (comm.isConnected()) 
+            for (;;) //WILL REMOVE THIS LATER...
             {
-                comm.disconnect();
+                vTaskDelay(pdMS_TO_TICKS(1000));
             }
+
+            
+            if (comm.isConnected())
+                comm.disconnect();
         }
 
         eeprom.close();
@@ -111,11 +134,10 @@ extern "C" void app_main(void)
             vTaskDelay(pdMS_TO_TICKS(sleep_time_sec * 1000));
         #endif
     }
-    
+
     #if DEEP_SLEEP_EN == 1
-        ESP_LOGI("MAIN", "Going into deep sleep for %d seconds...", sleep_time_sec);
-        esp_sleep_enable_timer_wakeup(sleep_time_sec * 1000000ULL);  // Convert to microseconds
+        ESP_LOGI("MAIN", "Going into deep sleep...");
+        esp_sleep_enable_timer_wakeup(sleep_time_sec * 1000000ULL);
         esp_deep_sleep_start();
     #endif
-
 }
